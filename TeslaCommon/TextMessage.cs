@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Drawing;
 
 namespace TeslaCommon
 {
     [Serializable]
-    public class ImagePacket : IPacket
+    public class TextMessage : IMessage
     {
         public ClientData Source { get; set; }
         public ClientData Destination { get; set; }
         public DateTime MessageTime { get; set; }
-        public Bitmap Image { get; set; }
-        public ImagePacket(Bitmap img, ClientData src, ClientData dst)
+        public string Message { get; set; }
+        public TextMessage(string msg, ClientData src, ClientData dst)
         {
             Source = src;
             Destination = dst;
-            Image = img;
+            Message = msg;
             MessageTime = DateTime.Now;
         }
     }
