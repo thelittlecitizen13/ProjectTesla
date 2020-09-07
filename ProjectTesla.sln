@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30330.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectTesla", "ProjectTesla\ProjectTesla.csproj", "{7C9CB4F2-588C-4945-AD5B-494FB98113E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeslaServer", "TeslaServer\TeslaServer.csproj", "{531C701A-840C-46A4-8A2B-BBC4CD4C5138}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeslaServer", "TeslaServer\TeslaServer.csproj", "{531C701A-840C-46A4-8A2B-BBC4CD4C5138}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeslaClient", "TeslaClient\TeslaClient.csproj", "{3144C8F4-7946-4665-BC6B-0507B14728CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeslaClient", "TeslaClient\TeslaClient.csproj", "{3144C8F4-7946-4665-BC6B-0507B14728CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeslaCommon", "TeslaCommon\TeslaCommon.csproj", "{7B103DFE-B660-408A-A6E5-BCC007F190B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7C9CB4F2-588C-4945-AD5B-494FB98113E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7C9CB4F2-588C-4945-AD5B-494FB98113E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7C9CB4F2-588C-4945-AD5B-494FB98113E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7C9CB4F2-588C-4945-AD5B-494FB98113E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{531C701A-840C-46A4-8A2B-BBC4CD4C5138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{531C701A-840C-46A4-8A2B-BBC4CD4C5138}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{531C701A-840C-46A4-8A2B-BBC4CD4C5138}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,6 +23,10 @@ Global
 		{3144C8F4-7946-4665-BC6B-0507B14728CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3144C8F4-7946-4665-BC6B-0507B14728CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3144C8F4-7946-4665-BC6B-0507B14728CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B103DFE-B660-408A-A6E5-BCC007F190B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B103DFE-B660-408A-A6E5-BCC007F190B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B103DFE-B660-408A-A6E5-BCC007F190B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B103DFE-B660-408A-A6E5-BCC007F190B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
