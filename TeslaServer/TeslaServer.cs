@@ -90,5 +90,40 @@ namespace TeslaServer
                 nwStream.Write(bytesToSend, 0, bytesToSend.Length);
             }
         }
+        private void receiveMessagesAsText(TcpClient client)
+        {
+            //---get the incoming data through a network stream---
+            NetworkStream nwStream = client.GetStream();
+            byte[] buffer = new byte[client.ReceiveBufferSize];
+
+            string dataReceived;
+            //ToDo: split text send and recieve to a different function, before changing to receiving objects
+            do
+            {
+                //---read incoming stream---
+                try
+                {
+                    int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize);
+                    //---convert the data received into a string---
+                    dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                    Console.WriteLine("Received : " + dataReceived);
+
+                    //---write back the text to the client---
+                    Console.WriteLine("Sending to all clients : " + dataReceived);
+                    SendToAllClients(dataReceived);
+                }
+                catch
+                {
+                    break;
+                }
+
+
+            }
+            while (!dataReceived.ToLower().Contains("exit!"));
+            //ToDo: to send & recieve repeatedly, should find a way to loop the send & receive 
+            //      and take the client.close() out of the loop
+            removeClientFromList(client);
+            client.Close();
+        }
     }
 }
