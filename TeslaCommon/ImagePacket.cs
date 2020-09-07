@@ -3,6 +3,7 @@ using System.Drawing;
 
 namespace TeslaCommon
 {
+    [Serializable]
     public class ImagePacket : IPacket
     {
         public ClientData Source { get; set; }

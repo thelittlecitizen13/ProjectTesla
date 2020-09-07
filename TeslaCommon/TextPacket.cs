@@ -2,6 +2,7 @@
 
 namespace TeslaCommon
 {
+    [Serializable]
     public class TextPacket : IPacket
     {
         public ClientData Source { get; set; }
