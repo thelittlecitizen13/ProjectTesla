@@ -5,4 +5,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="TeslaCommon">
+      <HintPath>..\TeslaCommon\bin\Debug\netcoreapp3.1\TeslaCommon.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

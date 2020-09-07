@@ -9,4 +9,10 @@
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="TeslaCommon">
+      <HintPath>..\TeslaCommon\bin\Debug\netcoreapp3.1\TeslaCommon.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

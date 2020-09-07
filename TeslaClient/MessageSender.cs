@@ -1,4 +1,7 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -9,11 +12,11 @@ namespace TeslaClient
 {
     public class MessageSender
     {
-        private NetworkStream nwStream;
+        private NetworkStream _nwStream;
         private IFormatter _binaryFormatter;
         public MessageSender(NetworkStream networkStream)
         {
-            nwStream = networkStream;
+            _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
         }
         public void SendNewMessage()
@@ -23,14 +26,47 @@ namespace TeslaClient
         public void SendNewTextMessage(string text, ClientData src, ClientData dst)
         {
             // ToDo: change the SRC and DST to real 
-            TextMessage message = new TextMessage(text, src, dst);
-
-            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(Text);
-            nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+            IMessage message = new TextMessage(text, src, dst);
+            _binaryFormatter.Serialize(_nwStream, message);
         }
-        public void SendNewImageMessage(Bitmap img)
+        public void SendNewImageMessage(ClientData src, ClientData dst)
         {
-
+            IMessage message = new ImageMessage(takeScreenShot(), src, dst);
+            _binaryFormatter.Serialize(_nwStream, message);
+        }
+        public void SendNewImageMessage(string imagePath, ClientData src, ClientData dst)
+        {
+            var img = loadImage(imagePath);
+            if (img == null)
+            {
+                SendNewTextMessage("Tried to send a message with no success", src, dst);
+                return;
+            }
+            IMessage message = new ImageMessage(img, src, dst);
+            _binaryFormatter.Serialize(_nwStream, message);
+        }
+        private Bitmap takeScreenShot()
+        {
+            var bitmap = new Bitmap(1920, 1080);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.CopyFromScreen(0, 0, 0, 0,
+                bitmap.Size, CopyPixelOperation.SourceCopy);
+            }
+            // Important - the path have to be valid to be able to save the image
+            bitmap.Save(@"C:\images\clientPrintScreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
+            return bitmap;
+        }
+        private Bitmap loadImage(string path)
+        {
+            try
+            {
+                return new Bitmap(path);
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
         }
         
     }
