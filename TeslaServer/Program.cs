@@ -6,7 +6,8 @@ namespace TeslaServer
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            TeslaServer server = new TeslaServer(8844);
+            server.Run();
         }
     }
 }

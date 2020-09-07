@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace TeslaClient
 {
@@ -28,7 +29,7 @@ namespace TeslaClient
             byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(textToSend);
 
             //---send the text---
-            Console.WriteLine("Sending : " + msg);
+            //Console.WriteLine("Sending : " + msg);
             nwStream.Write(bytesToSend, 0, bytesToSend.Length);
         }
         private void ReceiveMessages(NetworkStream nwStream)
@@ -43,7 +44,7 @@ namespace TeslaClient
                 {
                     break;
                 }
-                Console.WriteLine("Received : " + received);
+                Console.WriteLine(received);
             }
         }
         private void registerToServer(NetworkStream nwStream)
@@ -52,7 +53,7 @@ namespace TeslaClient
             nwStream.Write(bytesToSend, 0, bytesToSend.Length);
             byte[] bytesToRead = new byte[_client.ReceiveBufferSize];
             int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
-            Console.WriteLine("Received : " + Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
+            Console.WriteLine(Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
         }
         public void Run()
         {
