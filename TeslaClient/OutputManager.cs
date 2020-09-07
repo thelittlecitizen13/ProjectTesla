@@ -14,6 +14,15 @@ namespace TeslaClient
         {
             _clientName = clientName;
         }
+        private void displayTextToConsole(string text)
+        {
+            Console.WriteLine(text);
+        }
+        public void DisplayText(string text)
+        {
+            // You can control where the text will be displayed
+            displayTextToConsole(text);
+        }
         public void DisplayAnImage(string imgPath)
         {
             try
