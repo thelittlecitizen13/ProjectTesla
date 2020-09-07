@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Diagnostics;
+using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using TeslaCommon;
@@ -34,5 +35,14 @@ namespace TeslaClient
             catch { }
             return null;
         }
+        private void processMessage(IMessage msg)
+        {
+            
+        }
+        public void Run()
+        {
+            
+        }
+
     }
 }
