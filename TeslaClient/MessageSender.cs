@@ -53,7 +53,7 @@ namespace TeslaClient
                 g.CopyFromScreen(0, 0, 0, 0,
                 bitmap.Size, CopyPixelOperation.SourceCopy);
             }
-            // Important - the path have to be valid to be able to save the image
+            CreateImageFolder();
             bitmap.Save(@"C:\images\clientPrintScreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
             return bitmap;
         }
@@ -67,6 +67,10 @@ namespace TeslaClient
             {
                 return null;
             }
+        }
+        private void CreateImageFolder()
+        {
+            System.IO.Directory.CreateDirectory(@"C:\images");
         }
         
     }
