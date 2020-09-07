@@ -14,14 +14,19 @@ namespace TeslaClient
     {
         private NetworkStream _nwStream;
         private IFormatter _binaryFormatter;
-        public MessageSender(NetworkStream networkStream)
+        private OutputManager _outputManeger;
+        private InputManager _inputManager;
+        public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager)
         {
             _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
+            _outputManeger = outputManager;
+            _inputManager = inputManager;
         }
         public void SendNewMessage()
         {
-
+            _outputManeger.DisplayText("Enter your message");
+            string msg = _inputManager.GetUserInput();
         }
         public void SendNewTextMessage(string text, ClientData src, ClientData dst)
         {

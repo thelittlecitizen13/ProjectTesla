@@ -3,9 +3,8 @@ namespace TeslaClient
 {
     public class InputManager
     {
-        public string GetUserInput(string textToDisplay)
+        public string GetUserInput()
         {
-            Console.WriteLine(textToDisplay);
             return Console.ReadLine();
         }
         public bool IsSendPicture(string input)
