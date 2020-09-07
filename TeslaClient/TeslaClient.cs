@@ -46,5 +46,13 @@ namespace TeslaClient
                 Console.WriteLine("Received : " + received);
             }
         }
+        private void registerToServer(NetworkStream nwStream)
+        {
+            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(Name);
+            nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+            byte[] bytesToRead = new byte[_client.ReceiveBufferSize];
+            int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
+            Console.WriteLine("Received : " + Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
+        }
     }
 }
