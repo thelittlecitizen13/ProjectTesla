@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using TeslaCommon;
 
 namespace TeslaClient
 {
@@ -12,6 +13,26 @@ namespace TeslaClient
         {
             _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
+        }
+        public IMessage ReceiveAMessage()
+        {
+            var dataReceived = _binaryFormatter.Deserialize(_nwStream);
+            System.Console.WriteLine(dataReceived.GetType()); // Debugging!
+            IMessage messageReceived;
+            try
+            {
+                // ToDo: Instead of try catch, try to GetType() on dataReceived and check of equals to relvant types
+                messageReceived = (TextMessage)dataReceived;
+                return messageReceived;
+            }
+            catch { }
+            try
+            {
+                messageReceived = (ImageMessage)dataReceived;
+                return messageReceived;
+            }
+            catch { }
+            return null;
         }
     }
 }
