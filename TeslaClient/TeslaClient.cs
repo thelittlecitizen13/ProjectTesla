@@ -54,5 +54,28 @@ namespace TeslaClient
             int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
             Console.WriteLine("Received : " + Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
         }
+        public void Run()
+        {
+            try
+            {
+                using (NetworkStream nwStream = _client.GetStream())
+                {
+                    registerToServer(nwStream);
+                    ThreadPool.QueueUserWorkItem(obj => ReceiveMessages(nwStream));
+                    while (true)
+                    {
+                        WriteAMessage(nwStream);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                _client.Close();
+            }
+        }
     }
 }
