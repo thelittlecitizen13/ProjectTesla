@@ -47,6 +47,45 @@ namespace TeslaServer
             }
 
         }
+        public void Run()
+        {
+
+            _server.Start();
+            Console.WriteLine($"Listening at {_server.LocalEndpoint}. Waiting for connections.");
+
+            try
+            {
+                // ToDo: Figure a way to accept client connections async at the best way.
+                while (true)
+                {
+                    //---incoming client connected---
+                    TcpClient client = _server.AcceptTcpClient();
+                    object obj = new object();
+                    ThreadPool.QueueUserWorkItem(obj =>
+                    {
+                        if (registerClient(client))
+                        {
+                            receiveMessagesAsText(client);
+                        }
+                        else
+                        {
+                            client.Close();
+                        }
+                    }, null);
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine("SocketException: {0}", e);
+            }
+            finally
+            {
+                // Stop listening for new clients.
+                Console.WriteLine("Terminating...");
+                _server.Stop();
+            }
+
+        }
         private bool tryAddClientToList(string name, TcpClient client)
         {
             if (!_clientsList.ContainsKey(name))
