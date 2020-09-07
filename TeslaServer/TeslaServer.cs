@@ -74,5 +74,21 @@ namespace TeslaServer
             if (!string.IsNullOrWhiteSpace(clientName))
                 SendToAllClients($"{clientName} left!");
         }
+        private void connectionEstablishedPrint(TcpClient client, string Name)
+        {
+            Console.WriteLine($"{Name} is connected. Remote connection: {0}:{1} ",
+                        ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString(),
+                        ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString());
+        }
+        private void SendToAllClients(string msg)
+        {
+            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(msg);
+            foreach (var client_port in _clientsList)
+            {
+                NetworkStream nwStream = client_port.Value.GetStream();
+
+                nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+            }
+        }
     }
 }
