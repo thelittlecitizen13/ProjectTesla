@@ -27,6 +27,24 @@ namespace TeslaClient
         {
             _outputManeger.DisplayText("Enter your message");
             string msg = _inputManager.GetUserInput();
+            if (_inputManager.IsSendPicture(msg))
+            {
+                if (_inputManager.IsSendScreenShot(msg))
+                    SendNewImageMessage(new ClientData("all"), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
+                else
+                {
+                    string imgPath = System.Text.RegularExpressions.Regex.Split(msg, ";")[1];
+                    if (_inputManager.IsFileExists(imgPath))
+                        SendNewImageMessage(imgPath, new ClientData("all"), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
+                    else
+                        _outputManeger.DisplayText("Error - img not found");
+                }
+            }
+            else
+            {
+                SendNewTextMessage(msg, new ClientData("all"), new ClientData("all"));
+            }
+
         }
         public void SendNewTextMessage(string text, ClientData src, ClientData dst)
         {

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+
 namespace TeslaClient
 {
     public class InputManager
@@ -18,6 +20,10 @@ namespace TeslaClient
         public bool IsSendLocalPicture(string input)
         {
             return input.ToLower().StartsWith("picture;");
+        }
+        public bool IsFileExists(string filePath)
+        {
+            return (File.Exists(filePath));
         }
     }
 }

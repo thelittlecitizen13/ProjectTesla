@@ -31,7 +31,7 @@ namespace TeslaClient
             }
             catch
             {
-                System.Console.WriteLine("Cannot open image");
+                displayTextToConsole("Cannot open image");
             }
             
         }
