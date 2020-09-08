@@ -19,6 +19,7 @@ namespace TeslaServer
         private TcpListener _server;
         private ConcurrentDictionary<string, TcpClient> _clientsList;
         private IFormatter _binaryFormatter;
+        private Members _members;
 
         public TeslaServer(int port)
         {
@@ -26,41 +27,16 @@ namespace TeslaServer
             _server = new TcpListener(_localAddress, port);
             _clientsList = new ConcurrentDictionary<string, TcpClient>();
             _binaryFormatter = new BinaryFormatter();
+            _members = new Members();
         }
+        
         private bool registerClient(TcpClient client)
         {
             NetworkStream nwStream = client.GetStream();
-            byte[] buffer = new byte[client.ReceiveBufferSize];
-
-            //---read incoming stream---
-            int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize);
-
-            //---convert the data received into a string---
-            string clientName = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-            if (tryAddClientToList(clientName, client))
-            {
-                byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes($"Welcome, {clientName}");
-                connectionEstablishedPrint(client, clientName);
-                //---send the text---
-                nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-                SendToAllClients($"{clientName} joined!");
-                return true;
-            }
-            else
-            {
-                byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes($"{clientName} name is already taken");
-                //---send the text---
-                nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-                return false;
-            }
-
-        }
-        private bool registerClientWithMessage(TcpClient client)
-        {
-            NetworkStream nwStream = client.GetStream();
             TextMessage dataReceived = (TextMessage)_binaryFormatter.Deserialize(nwStream);
+            User newUser = new User(dataReceived.Source, client);
             string clientName = dataReceived.Source.MemberName;
-            if (tryAddClientToList(clientName, client))
+            if (_members.AddUser(newUser))
             {
                 connectionEstablishedPrint(client, clientName);
                 TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("all"), new MemberData("all"));
@@ -91,7 +67,7 @@ namespace TeslaServer
                     object obj = new object();
                     ThreadPool.QueueUserWorkItem(obj =>
                     {
-                        if (registerClientWithMessage(client))
+                        if (registerClient(client))
                         {
                             receiveMessage(client);
                         }
@@ -114,32 +90,13 @@ namespace TeslaServer
             }
 
         }
-        private bool tryAddClientToList(string name, TcpClient client)
-        {
-            if (!_clientsList.ContainsKey(name))
-            {
-                _clientsList.TryAdd(name, client);
-                return true;
-            }
-            return false;
 
-        }
-        private void removeClientFromList(TcpClient client)
-        {
 
-            string clientName = "";
-            foreach (var clt in _clientsList)
-            {
-                if (clt.Value == client)
-                {
-                    clientName = clt.Key;
-                    _clientsList.TryRemove(clientName, out client);
-                    Console.WriteLine($"{clientName} left the chat!");
-                    break;
-                }
-            }
-            if (!string.IsNullOrWhiteSpace(clientName))
-                SendToAllClients(new TextMessage($"{clientName} has left the chat!", new MemberData("Server"), new MemberData("all")));
+        private void removeUserFromMembersDB(TcpClient client)
+        {
+            User removedUser = _members.RemoveUser(client);
+            if (removedUser != null)
+                SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new MemberData("Server"), new MemberData("all")));
         }
         private void connectionEstablishedPrint(TcpClient client, string Name)
         {
@@ -147,7 +104,40 @@ namespace TeslaServer
                         ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString(),
                         ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString());
         }
-        private void SendToAllClients(string msg)
+        
+        private void SendToAllClients(object obj)
+        {
+            foreach (var user in _members.TeslaUsers.Values)
+            {
+                _binaryFormatter.Serialize(user.nwStream, obj);
+            }
+        }
+        
+        private void receiveMessage(TcpClient client) 
+        {
+            //---get the incoming data through a network stream---
+            NetworkStream nwStream = client.GetStream();
+            do
+            {
+                try
+                {
+                    var dataReceived = _binaryFormatter.Deserialize(nwStream);
+                    Console.WriteLine("Sending to all clients "); // For Debug
+                    SendToAllClients(dataReceived);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    break;
+                }
+            }
+            while (true); 
+            // ToDo: find a way to change it - maybe to create searlization class
+            //while (!dataReceived.ToLower().Contains("exit!"));
+            removeUserFromMembersDB(client);
+            client.Close();
+        }
+        private void SendToAllClients(string msg) // Deprecated
         {
             byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(msg);
             foreach (var client_port in _clientsList)
@@ -157,16 +147,7 @@ namespace TeslaServer
                 nwStream.Write(bytesToSend, 0, bytesToSend.Length);
             }
         }
-        private void SendToAllClients(object obj)
-        {
-            foreach (var client_port in _clientsList)
-            {
-                NetworkStream nwStream = client_port.Value.GetStream();
-                _binaryFormatter.Serialize(nwStream, obj);
-                //nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-            }
-        }
-        private void receiveMessagesAsText(TcpClient client)
+        private void receiveMessagesAsText(TcpClient client) // Deprecated
         {
             //---get the incoming data through a network stream---
             NetworkStream nwStream = client.GetStream();
@@ -198,48 +179,37 @@ namespace TeslaServer
             while (!dataReceived.ToLower().Contains("exit!"));
             //ToDo: to send & recieve repeatedly, should find a way to loop the send & receive 
             //      and take the client.close() out of the loop
-            removeClientFromList(client);
+            removeUserFromMembersDB(client);
             client.Close();
         }
-        private void receiveMessage(TcpClient client)
-        {
-            //---get the incoming data through a network stream---
-            NetworkStream nwStream = client.GetStream();
-            byte[] buffer = new byte[client.ReceiveBufferSize];
+        //private bool registerClient(TcpClient client) // Deprecated
+        //{
 
-//            string dataReceived;
-            //ToDo: split text send and recieve to a different function, before changing to receiving objects
-            do
-            {
-                //---read incoming stream---
-                try
-                {
-                    var dataReceived = _binaryFormatter.Deserialize(nwStream);
-                    
-                    //int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize); // ToRemove
-                    //byte[] truncArray = new byte[bytesRead]; 
-                    //Array.Copy(buffer, truncArray, truncArray.Length);
+        //    NetworkStream nwStream = client.GetStream();
+        //    byte[] buffer = new byte[client.ReceiveBufferSize];
 
-                    //---write back the text to the client---
-                    Console.WriteLine("Sending to all clients ");
-                    //_binaryFormatter.Serialize(nwStream, dataReceived);
-                    SendToAllClients(dataReceived);
-                    //SendToAllClients(truncArray);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                    break;
-                }
+        //    //---read incoming stream---
+        //    int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize);
 
+        //    //---convert the data received into a string---
+        //    string clientName = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+        //    if (tryAddClientToList(clientName, client))
+        //    {
+        //        byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes($"Welcome, {clientName}");
+        //        connectionEstablishedPrint(client, clientName);
+        //        //---send the text---
+        //        nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+        //        SendToAllClients($"{clientName} joined!");
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes($"{clientName} name is already taken");
+        //        //---send the text---
+        //        nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+        //        return false;
+        //    }
 
-            }
-            while (true); // ToDo: find a way to change it - maybe to create searlization class
-            //while (!dataReceived.ToLower().Contains("exit!"));
-            //ToDo: to send & recieve repeatedly, should find a way to loop the send & receive 
-            //      and take the client.close() out of the loop
-            removeClientFromList(client);
-            client.Close();
-        }
+        //} 
     }
 }

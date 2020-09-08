@@ -59,8 +59,16 @@ namespace TeslaClient
 
         public IMessage ReceiveAMessage()
         {
-            var dataReceived = _binaryFormatter.Deserialize(_nwStream);
-            return (IMessage)dataReceived;
+            try
+            {
+                var dataReceived = _binaryFormatter.Deserialize(_nwStream);
+                return (IMessage)dataReceived;
+            }
+            catch
+            {
+                return null;
+            }
+            
         }
         
         public void Run()
@@ -68,8 +76,12 @@ namespace TeslaClient
             while (true)
             {
                 IMessage msg = ReceiveAMessage();
+                if (msg == null)
+                    break;
                 processMessage(msg);
             }
+            _nwStream.Close();
+            
         }
 
     }

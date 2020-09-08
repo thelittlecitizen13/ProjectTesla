@@ -1,31 +1,61 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Net.Sockets;
 using TeslaCommon;
 
 namespace TeslaServer
 {
     public class Members
     {
-        public Dictionary<string, IMember> TeslaMembers { get; set; }
+        public ConcurrentDictionary<string, User> TeslaUsers { get; set; }
+        public ConcurrentDictionary<string, Group> TeslaGroups { get; set; }
         public Members()
         {
-            TeslaMembers = new Dictionary<string, IMember>();
+            TeslaUsers = new ConcurrentDictionary<string, User>();
+            TeslaGroups = new ConcurrentDictionary<string, Group>();
         }
-        public void AddMember(IMember member)
+        public bool AddUser(User member)
         {
-            if (!TeslaMembers.ContainsKey(member.Name))
-            {
-                TeslaMembers.Add(member.Name, member);
-                return;
-            }
+            return TeslaUsers.TryAdd(member.Name, member);
         }
-        public void RemoveMember(string memberName)
+        public User RemoveUser(string memberName)
         {
-            if (TeslaMembers.ContainsKey(memberName))
+            if (TeslaUsers.ContainsKey(memberName))
             {
-                TeslaMembers.Remove(memberName);
-                return;
+                User deletedMember;
+                TeslaUsers.TryRemove(memberName, out deletedMember);
+                return deletedMember;
             }
+            return null;
         }
+        public User RemoveUser(TcpClient client)
+        {
+            foreach (var clt in TeslaUsers)
+            {
+                if (clt.Value.client == client)
+                {
+                    User deletedMember;
+                    TeslaUsers.TryRemove(clt.Key, out deletedMember);
+                    return deletedMember;
+                }
+            }
+            return null;
+        }
+        public bool AddGroup(Group group)
+        {
+            return TeslaGroups.TryAdd(group.Name, group);
+        }
+        public Group RemoveGroup(string memberName)
+        {
+            if (TeslaGroups.ContainsKey(memberName))
+            {
+                Group deletedMember;
+                TeslaGroups.TryRemove(memberName, out deletedMember);
+                return deletedMember;
+            }
+            return null;
+        }
+        
 
     }
 }
