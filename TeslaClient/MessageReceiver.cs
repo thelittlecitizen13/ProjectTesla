@@ -45,13 +45,13 @@ namespace TeslaClient
         }
         private void processTextMessage(TextMessage msg)
         {
-            string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.ClientName}: {msg.Message}";
+            string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.MemberName}: {msg.Message}";
             _outputManager.DisplayText(textToShow);
         }
 
         private void processImageMessage(ImageMessage msg)
         {
-            string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.ClientName}: Image Received";
+            string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.MemberName}: Image Received";
             _outputManager.DisplayText(textToShow);
             string imgPath = _outputManager.SaveAnImage(msg.Image);
             _outputManager.DisplayAnImage(imgPath);

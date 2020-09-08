@@ -59,7 +59,7 @@ namespace TeslaServer
         {
             NetworkStream nwStream = client.GetStream();
             TextMessage dataReceived = (TextMessage)_binaryFormatter.Deserialize(nwStream);
-            string clientName = dataReceived.Source.ClientName;
+            string clientName = dataReceived.Source.MemberName;
             if (tryAddClientToList(clientName, client))
             {
                 connectionEstablishedPrint(client, clientName);
