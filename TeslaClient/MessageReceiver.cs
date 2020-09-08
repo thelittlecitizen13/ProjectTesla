@@ -13,35 +13,34 @@ namespace TeslaClient
         private NetworkStream _nwStream;
         private IFormatter _binaryFormatter;
         private OutputManager _outputManager;
-        
-        public MessageReceiver(NetworkStream networkStream, OutputManager outputManager)
+        private ContactsManager _contactsManager;
+
+        public MessageReceiver(NetworkStream networkStream, OutputManager outputManager, ContactsManager contactsManager)
         {
             _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
             _outputManager = outputManager;
+            _contactsManager = contactsManager;
         }
 
         private void processMessage(IMessage msg)
         {
-            if (msg == null)
-            {
-                _outputManager.DisplayText("Fatal - Message display failed"); // for Debug
-            }
             if (msg is TextMessage)
             {
                 processTextMessage((TextMessage)msg);
-            }
-            else
+                return;
+            }                        
+            if (msg is ImageMessage)
             {
-                if (msg is ImageMessage)
-                {
-                    processImageMessage((ImageMessage)msg);                    
-                }
-                else
-                {
-                    _outputManager.DisplayText("Fatal - Message display failed"); // for Debug
-                }
+                processImageMessage((ImageMessage)msg);
+                return;
             }
+            if (msg is ContactsMessage)
+            {
+                processContactsMessage((ContactsMessage)msg);
+                return;
+            }
+            _outputManager.DisplayText("Fatal - Message display failed"); // for Debug
         }
         private void processTextMessage(TextMessage msg)
         {
@@ -56,7 +55,10 @@ namespace TeslaClient
             string imgPath = _outputManager.SaveAnImage(msg.Image);
             _outputManager.DisplayAnImage(imgPath);
         }
-
+        private void processContactsMessage(ContactsMessage contactsMessage)
+        {
+            _contactsManager.UpdateContactsDB(contactsMessage.ContactList);
+        }
         public IMessage ReceiveAMessage()
         {
             try

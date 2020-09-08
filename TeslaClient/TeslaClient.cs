@@ -18,8 +18,7 @@ namespace TeslaClient
         private OutputManager _outputManager;
         private InputManager _inputManager;
         private MemberData _clientData;
-        private Contacts _contactsDB;
-        private ContactsMenu _contactsMenu;
+        private ContactsManager _contactsManager;
 
         public TeslaClient(string address, int port, int clientNumber)
         {
@@ -29,11 +28,12 @@ namespace TeslaClient
             _client = new TcpClient(_serverAddress.ToString(), _port);
             _outputManager = new OutputManager(Name);
             _inputManager = new InputManager(_outputManager);
-            _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager);
+            _contactsManager = new ContactsManager();
+            _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager, _contactsManager);
             _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
             _clientData = new MemberData(Name);
-            _contactsDB = new Contacts();
-            _contactsMenu = new ContactsMenu();
+
+            
         }
 
         private void WriteAMessage(NetworkStream nwStream)
@@ -51,9 +51,13 @@ namespace TeslaClient
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
         }
+        private void displayContactMenu()
+        {
+            _outputManager.DisplayText(_contactsManager.ContactsMenu.Menu);
+        }
         public void Run()
         {
-            updateContactsDB(_contactsDB);
+            _contactsManager.UpdateContactsDB();
             try
             {
                 using (NetworkStream nwStream = _client.GetStream())
@@ -61,7 +65,7 @@ namespace TeslaClient
                     registerToServerWithMessage(nwStream);
                     while (true)
                     {
-                        _outputManager.DisplayText(_contactsMenu.Menu);
+                        displayContactMenu();
                         //ToDo: Access private chat rooms from here
                         ThreadPool.QueueUserWorkItem(obj => ReceiveMessages(nwStream));
                         while (true)
@@ -80,12 +84,7 @@ namespace TeslaClient
                 _client.Close();
             }
         }
-        private void updateContactsDB(Contacts contacts)
-        {
-            _contactsDB.ContactList = contacts.ContactList;
-            _contactsMenu.CreateMenu(_contactsDB);
-
-        }
+        
         private void registerToServer(NetworkStream nwStream) //Deprecated
         {
 
