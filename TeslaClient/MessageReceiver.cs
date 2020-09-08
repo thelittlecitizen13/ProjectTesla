@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
@@ -59,22 +60,7 @@ namespace TeslaClient
         public IMessage ReceiveAMessage()
         {
             var dataReceived = _binaryFormatter.Deserialize(_nwStream);
-            System.Console.WriteLine(dataReceived.GetType()); // Debugging!
-            IMessage messageReceived;
-            try
-            {
-                // ToDo: Instead of try catch, try to GetType() on dataReceived and check of equals to relvant types
-                messageReceived = (TextMessage)dataReceived;
-                return messageReceived;
-            }
-            catch { }
-            try
-            {
-                messageReceived = (ImageMessage)dataReceived;
-                return messageReceived;
-            }
-            catch { }
-            return null;
+            return (IMessage)dataReceived;
         }
         
         public void Run()
