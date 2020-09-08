@@ -27,7 +27,7 @@ namespace TeslaClient
             Name = "client" + clientNumber;
             _client = new TcpClient(_serverAddress.ToString(), _port);
             _outputManager = new OutputManager(Name);
-            _inputManager = new InputManager();
+            _inputManager = new InputManager(_outputManager);
             _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager);
             _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
             _clientData = new MemberData(Name);
