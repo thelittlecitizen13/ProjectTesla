@@ -12,6 +12,7 @@ namespace TeslaCommon
         public Contacts()
         {
             ContactList = new ConcurrentDictionary<string, MemberData>();
+            ContactList.TryAdd("Everyone", new MemberData("Everyone"));
         }
         public bool AddContact(MemberData memberData)
         {

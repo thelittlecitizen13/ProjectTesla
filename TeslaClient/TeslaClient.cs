@@ -17,6 +17,8 @@ namespace TeslaClient
         private MessageReceiver _messageReceiver;
         private OutputManager _outputManager;
         private InputManager _inputManager;
+        private MemberData _clientData;
+        private Contacts _contactsDB;
 
         public TeslaClient(string address, int port, int clientNumber)
         {
@@ -28,6 +30,8 @@ namespace TeslaClient
             _inputManager = new InputManager();
             _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager);
             _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
+            _clientData = new MemberData(Name);
+            _contactsDB = new Contacts();
         }
 
         private void WriteAMessage(NetworkStream nwStream)
@@ -45,31 +49,11 @@ namespace TeslaClient
         private void ReceiveMessages(NetworkStream nwStream)
         {
             _messageReceiver.Run();
-            ////---read back the text---
-            //while (true)
-            //{
-            //    byte[] bytesToRead = new byte[_client.ReceiveBufferSize];
-            //    int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
-            //    string received = Encoding.ASCII.GetString(bytesToRead, 0, bytesRead);
-            //    if (string.IsNullOrWhiteSpace(received))
-            //    {
-            //        break;
-            //    }
-            //    Console.WriteLine(received);
-            //}
         }
-        private void registerToServer(NetworkStream nwStream)
-        {
-
-            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(Name);
-            nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-            byte[] bytesToRead = new byte[_client.ReceiveBufferSize];
-            int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
-            Console.WriteLine(Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
-        }
+        
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
-            _messageSender.SendNewTextMessage(Name, new MemberData(Name), new MemberData("all"));
+            _messageSender.SendNewTextMessage(Name, _clientData, new MemberData("all"));
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
         }
@@ -80,10 +64,15 @@ namespace TeslaClient
                 using (NetworkStream nwStream = _client.GetStream())
                 {
                     registerToServerWithMessage(nwStream);
-                    ThreadPool.QueueUserWorkItem(obj => ReceiveMessages(nwStream));
                     while (true)
                     {
-                        WriteAMessage(nwStream);
+
+                        //ToDo: Access private chat rooms from here
+                        ThreadPool.QueueUserWorkItem(obj => ReceiveMessages(nwStream));
+                        while (true)
+                        {
+                            WriteAMessage(nwStream);
+                        }
                     }
                 }
             }
@@ -95,6 +84,15 @@ namespace TeslaClient
             {
                 _client.Close();
             }
+        }
+        private void registerToServer(NetworkStream nwStream) //Deprecated
+        {
+
+            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(Name);
+            nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+            byte[] bytesToRead = new byte[_client.ReceiveBufferSize];
+            int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
+            Console.WriteLine(Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
         }
     }
 }
