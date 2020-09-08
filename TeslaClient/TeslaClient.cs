@@ -19,6 +19,7 @@ namespace TeslaClient
         private InputManager _inputManager;
         private MemberData _clientData;
         private Contacts _contactsDB;
+        private ContactsMenu _contactsMenu;
 
         public TeslaClient(string address, int port, int clientNumber)
         {
@@ -32,19 +33,12 @@ namespace TeslaClient
             _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
             _clientData = new MemberData(Name);
             _contactsDB = new Contacts();
+            _contactsMenu = new ContactsMenu();
         }
 
         private void WriteAMessage(NetworkStream nwStream)
         {
             _messageSender.SendNewMessage();
-            //Console.WriteLine("Your message:");
-            //string msg = _inputManager.GetUserInput();
-            //string textToSend = $"{Name}: {msg}";
-            //byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(textToSend);
-
-            ////---send the text---
-            ////Console.WriteLine("Sending : " + msg);
-            //nwStream.Write(bytesToSend, 0, bytesToSend.Length);
         }
         private void ReceiveMessages(NetworkStream nwStream)
         {
@@ -59,6 +53,7 @@ namespace TeslaClient
         }
         public void Run()
         {
+            updateContactsDB(_contactsDB);
             try
             {
                 using (NetworkStream nwStream = _client.GetStream())
@@ -66,7 +61,7 @@ namespace TeslaClient
                     registerToServerWithMessage(nwStream);
                     while (true)
                     {
-
+                        _outputManager.DisplayText(_contactsMenu.Menu);
                         //ToDo: Access private chat rooms from here
                         ThreadPool.QueueUserWorkItem(obj => ReceiveMessages(nwStream));
                         while (true)
@@ -84,6 +79,12 @@ namespace TeslaClient
             {
                 _client.Close();
             }
+        }
+        private void updateContactsDB(Contacts contacts)
+        {
+            _contactsDB.ContactList = contacts.ContactList;
+            _contactsMenu.CreateMenu(_contactsDB);
+
         }
         private void registerToServer(NetworkStream nwStream) //Deprecated
         {
