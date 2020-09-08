@@ -2,7 +2,7 @@
 
 namespace TeslaCommon
 {
-    interface IMember
+    public interface IMember
     {
         string Name { get; set; }
         MemberData Data { get; set; }
