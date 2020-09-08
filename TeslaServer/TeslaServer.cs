@@ -7,6 +7,8 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
+using System.Drawing;
+using System.Drawing.Imaging;
 using TeslaCommon;
 
 namespace TeslaServer
@@ -224,8 +226,9 @@ namespace TeslaServer
                     SendToAllClients(dataReceived);
                     //SendToAllClients(truncArray);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.Message);
                     break;
                 }
 

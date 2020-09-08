@@ -37,8 +37,9 @@ namespace TeslaClient
         }
         public string SaveAnImage(Bitmap img)
         {
-            string imgPath = CreateImageFolder();
-            img.Save(imgPath + "clientPrintScreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
+            string folderPath = CreateImageFolder();
+            string imgPath = folderPath + "clientPrintScreen" + Guid.NewGuid() + ".jpg";
+            img.Save(imgPath,ImageFormat.Jpeg);
             return imgPath;
         }
         public string CreateImageFolder()
