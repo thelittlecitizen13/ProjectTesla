@@ -5,11 +5,11 @@ namespace TeslaCommon
     [Serializable]
     public class TextMessage : IMessage
     {
-        public ClientData Source { get; set; }
-        public ClientData Destination { get; set; }
+        public MemberData Source { get; set; }
+        public MemberData Destination { get; set; }
         public DateTime MessageTime { get; set; }
         public string Message { get; set; }
-        public TextMessage(string msg, ClientData src, ClientData dst)
+        public TextMessage(string msg, MemberData src, MemberData dst)
         {
             Source = src;
             Destination = dst;

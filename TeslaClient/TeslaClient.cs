@@ -69,7 +69,7 @@ namespace TeslaClient
         }
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
-            _messageSender.SendNewTextMessage(Name, new ClientData(Name), new ClientData("all"));
+            _messageSender.SendNewTextMessage(Name, new MemberData(Name), new MemberData("all"));
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
         }

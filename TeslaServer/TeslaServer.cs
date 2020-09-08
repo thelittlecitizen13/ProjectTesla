@@ -63,14 +63,14 @@ namespace TeslaServer
             if (tryAddClientToList(clientName, client))
             {
                 connectionEstablishedPrint(client, clientName);
-                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new ClientData("all"), new ClientData("all"));
+                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("all"), new MemberData("all"));
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
-                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new ClientData("Server"), new ClientData("all")));
+                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new MemberData("Server"), new MemberData("all")));
                 return true;
             }
             else
             {
-                TextMessage nameTakenMessage = new TextMessage($"{clientName} name is already taken", new ClientData("all"), new ClientData("all"));
+                TextMessage nameTakenMessage = new TextMessage($"{clientName} name is already taken", new MemberData("all"), new MemberData("all"));
                 _binaryFormatter.Serialize(nwStream, nameTakenMessage);
                 return false;
             }
@@ -139,7 +139,7 @@ namespace TeslaServer
                 }
             }
             if (!string.IsNullOrWhiteSpace(clientName))
-                SendToAllClients(new TextMessage($"{clientName} has left the chat!", new ClientData("Server"), new ClientData("all")));
+                SendToAllClients(new TextMessage($"{clientName} has left the chat!", new MemberData("Server"), new MemberData("all")));
         }
         private void connectionEstablishedPrint(TcpClient client, string Name)
         {

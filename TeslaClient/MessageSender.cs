@@ -32,34 +32,34 @@ namespace TeslaClient
             if (_inputManager.IsSendPicture(msg))
             {
                 if (_inputManager.IsSendScreenShot(msg))
-                    SendNewImageMessage(new ClientData(_name), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
+                    SendNewImageMessage(new MemberData(_name), new MemberData("all")); // ToDo: get real ClientData when sending to users privately
                 else
                 {
                     string imgPath = System.Text.RegularExpressions.Regex.Split(msg, ";")[1];
                     if (_inputManager.IsFileExists(imgPath))
-                        SendNewImageMessage(imgPath, new ClientData(_name), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
+                        SendNewImageMessage(imgPath, new MemberData(_name), new MemberData("all")); // ToDo: get real ClientData when sending to users privately
                     else
                         _outputManeger.DisplayText("Error - img not found");
                 }
             }
             else
             {
-                SendNewTextMessage(msg, new ClientData(_name), new ClientData("all"));
+                SendNewTextMessage(msg, new MemberData(_name), new MemberData("all"));
             }
 
         }
-        public void SendNewTextMessage(string text, ClientData src, ClientData dst)
+        public void SendNewTextMessage(string text, MemberData src, MemberData dst)
         {
             // ToDo: change the SRC and DST to real 
             IMessage message = new TextMessage(text, src, dst);
             _binaryFormatter.Serialize(_nwStream, message);
         }
-        public void SendNewImageMessage(ClientData src, ClientData dst)
+        public void SendNewImageMessage(MemberData src, MemberData dst)
         {
             IMessage message = new ImageMessage(takeScreenShot(), src, dst);
             _binaryFormatter.Serialize(_nwStream, message);
         }
-        public void SendNewImageMessage(string imagePath, ClientData src, ClientData dst)
+        public void SendNewImageMessage(string imagePath, MemberData src, MemberData dst)
         {
             var img = loadImage(imagePath);
             if (img == null)
