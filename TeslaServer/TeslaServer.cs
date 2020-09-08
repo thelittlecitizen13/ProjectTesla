@@ -20,6 +20,7 @@ namespace TeslaServer
         private ConcurrentDictionary<string, TcpClient> _clientsList;
         private IFormatter _binaryFormatter;
         private Members _membersDB;
+        private Contacts _contactsDB;
 
         public TeslaServer(int port)
         {
@@ -28,6 +29,7 @@ namespace TeslaServer
             _clientsList = new ConcurrentDictionary<string, TcpClient>();
             _binaryFormatter = new BinaryFormatter();
             _membersDB = new Members();
+            _contactsDB = new Contacts();
         }
         
         private bool registerClient(TcpClient client)
@@ -36,7 +38,7 @@ namespace TeslaServer
             TextMessage dataReceived = (TextMessage)_binaryFormatter.Deserialize(nwStream);
             User newUser = new User(dataReceived.Source, client);
             string clientName = dataReceived.Source.MemberName;
-            if (_membersDB.AddUser(newUser))
+            if (_membersDB.AddUser(newUser) && _contactsDB.AddContact(newUser.Data))
             {
                 connectionEstablishedPrint(client, clientName);
                 TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("all"), new MemberData("all"));
@@ -95,6 +97,7 @@ namespace TeslaServer
         private void removeUserFromMembersDB(TcpClient client)
         {
             User removedUser = _membersDB.RemoveUser(client);
+            _contactsDB.RemoveContact(removedUser.Data);
             if (removedUser != null)
                 SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new MemberData("Server"), new MemberData("all")));
         }
