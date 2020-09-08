@@ -41,9 +41,10 @@ namespace TeslaServer
             if (_membersDB.AddUser(newUser) && _contactsDB.AddContact(newUser.Data))
             {
                 connectionEstablishedPrint(client, clientName);
-                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("all"), new MemberData("all"));
+                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("Server"), new MemberData("all"));
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
                 SendToAllClients(new TextMessage($"{clientName} joined the chat!", new MemberData("Server"), new MemberData("all")));
+                SendToAllClients(new ContactsMessage(_contactsDB, new MemberData("Server"), new MemberData("all"))); // ToDo: move to a function with indicative name
                 return true;
             }
             else
@@ -99,7 +100,10 @@ namespace TeslaServer
             User removedUser = _membersDB.RemoveUser(client);
             _contactsDB.RemoveContact(removedUser.Data);
             if (removedUser != null)
+            {
                 SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new MemberData("Server"), new MemberData("all")));
+                SendToAllClients(new ContactsMessage(_contactsDB, new MemberData("Server"), new MemberData("all"))); // ToDo: move to a function with indicative name
+            }
         }
         private void connectionEstablishedPrint(TcpClient client, string Name)
         {
