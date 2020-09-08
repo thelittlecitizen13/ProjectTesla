@@ -24,5 +24,9 @@ namespace TeslaClient
         {
             ContactsMenu.CreateMenu(ContactsDB);
         }
+        public MemberData GetContactByName(string name)
+        {
+            return ContactsDB.ContactList[name];
+        }
     }
 }

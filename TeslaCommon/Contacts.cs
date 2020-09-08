@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,10 +7,10 @@ namespace TeslaCommon
     [Serializable]
     public class Contacts
     {
-        public ConcurrentDictionary<string, MemberData> ContactList { get; set; }
+        public Dictionary<string, MemberData> ContactList { get; set; }
         public Contacts()
         {
-            ContactList = new ConcurrentDictionary<string, MemberData>();
+            ContactList = new Dictionary<string, MemberData>();
             ContactList.TryAdd("Everyone", new MemberData("Everyone"));
         }
         public bool AddContact(MemberData memberData)
@@ -23,7 +22,7 @@ namespace TeslaCommon
             if (ContactList.ContainsKey(memberData.MemberName))
             {
                 MemberData removedMemberData;
-                ContactList.TryRemove(memberData.MemberName, out removedMemberData);
+                ContactList.Remove(memberData.MemberName, out removedMemberData);
             }
         }
     }

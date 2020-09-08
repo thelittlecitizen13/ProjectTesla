@@ -75,14 +75,12 @@ namespace TeslaClient
         
         public void Run()
         {
-            while (true)
-            {
                 IMessage msg = ReceiveAMessage();
                 if (msg == null)
-                    break;
+                    return;
                 processMessage(msg);
             }
-            _nwStream.Close();
+            
             
         }
 

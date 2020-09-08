@@ -14,37 +14,36 @@ namespace TeslaClient
     {
         private NetworkStream _nwStream;
         private IFormatter _binaryFormatter;
-        private OutputManager _outputManeger;
+        private OutputManager _outputManager;
         private InputManager _inputManager;
         private string _name;
         public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager, string name)
         {
             _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
-            _outputManeger = outputManager;
+            _outputManager = outputManager;
             _inputManager = inputManager;
             _name = name;
         }
-        public void SendNewMessage()
+        public void SendNewMessage(string msg, MemberData currentChatMember, MemberData currentClient)
         {
-            _outputManeger.DisplayText("Enter your message");
-            string msg = _inputManager.GetUserInput();
+            
             if (_inputManager.IsSendPicture(msg))
             {
                 if (_inputManager.IsSendScreenShot(msg))
-                    SendNewImageMessage(new MemberData(_name), new MemberData("all")); // ToDo: get real ClientData when sending to users privately
+                    SendNewImageMessage(currentClient, currentChatMember);
                 else
                 {
                     string imgPath = System.Text.RegularExpressions.Regex.Split(msg, ";")[1];
                     if (_inputManager.IsFileExists(imgPath))
-                        SendNewImageMessage(imgPath, new MemberData(_name), new MemberData("all")); // ToDo: get real ClientData when sending to users privately
+                        SendNewImageMessage(imgPath, currentClient, currentChatMember);
                     else
-                        _outputManeger.DisplayText("Error - img not found");
+                        _outputManager.DisplayText("Error - img not found");
                 }
             }
             else
             {
-                SendNewTextMessage(msg, new MemberData(_name), new MemberData("all"));
+                SendNewTextMessage(msg, currentClient, currentChatMember);
             }
 
         }

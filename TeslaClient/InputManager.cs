@@ -34,7 +34,7 @@ namespace TeslaClient
         public string ValidateContactChoose(Contacts contacts)
         {
             string choose = Console.ReadLine();
-            while(!contacts.ContactList.Keys.Contains(choose) || choose.ToLower() != "exit")
+            while(!contacts.ContactList.ContainsKey(choose) || choose.ToLower() != "exit")
             {
                 _outputManager.DisplayText("Contact not found. Please try again");
                 choose = Console.ReadLine();

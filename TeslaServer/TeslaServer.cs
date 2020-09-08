@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -17,7 +16,6 @@ namespace TeslaServer
     {
         private IPAddress _localAddress;
         private TcpListener _server;
-        private ConcurrentDictionary<string, TcpClient> _clientsList;
         private IFormatter _binaryFormatter;
         private Members _membersDB;
         private Contacts _contactsDB;
@@ -26,7 +24,6 @@ namespace TeslaServer
         {
             _localAddress = IPAddress.Parse("127.0.0.1");
             _server = new TcpListener(_localAddress, port);
-            _clientsList = new ConcurrentDictionary<string, TcpClient>();
             _binaryFormatter = new BinaryFormatter();
             _membersDB = new Members();
             _contactsDB = new Contacts();
@@ -116,7 +113,7 @@ namespace TeslaServer
         {
             foreach (var user in _membersDB.TeslaUsers.Values)
             {
-                _binaryFormatter.Serialize(user.nwStream, obj);
+                sendMessageToUser(user.nwStream, obj);
             }
         }
         
@@ -129,8 +126,7 @@ namespace TeslaServer
                 try
                 {
                     var dataReceived = _binaryFormatter.Deserialize(nwStream);
-                    Console.WriteLine("Sending to all clients "); // For Debug
-                    SendToAllClients(dataReceived);
+                    processMessage((IMessage)dataReceived);
                 }
                 catch (Exception e)
                 {
@@ -144,79 +140,47 @@ namespace TeslaServer
             removeUserFromMembersDB(client);
             client.Close();
         }
-        private void SendToAllClients(string msg) // Deprecated
+        private void processMessage(IMessage message)
         {
-            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(msg);
-            foreach (var client_port in _clientsList)
+            if (message.GetType() != typeof(CommandMessage))
+                deliverMessageToDestination(message);
+            // ToDo: Handle command messages
+        }
+        private void deliverMessageToDestination(IMessage message)
+        {
+            // ToDo: Refactor - do logics in Members class
+            if (message.Destination.MemberName == "Everyone")
             {
-                NetworkStream nwStream = client_port.Value.GetStream();
-
-                nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+                SendToAllClients(message);
+                return;
+            }
+            string destinationUID = message.Destination.UID;
+            IMember destination;
+            destination = _membersDB.GetUser(destinationUID);
+            if (destination != null)
+            {
+                User destinationUser = (User)destination;
+                sendMessageToUser(destinationUser.nwStream, message);
+                return;
+            }
+            destination = _membersDB.GetGroup(destinationUID);
+            if (destination != null)
+            {
+                Group destinationGroup = (Group)destination;
+                foreach (var userData in destinationGroup.GroupUsers)
+                {
+                    User userInGroup = _membersDB.GetUser(userData.UID);
+                    sendMessageToUser(userInGroup.nwStream, message);
+                }
+                return;
             }
         }
-        private void receiveMessagesAsText(TcpClient client) // Deprecated
+        private void sendMessageToUser(NetworkStream nwStream, object obj)
         {
-            //---get the incoming data through a network stream---
-            NetworkStream nwStream = client.GetStream();
-            byte[] buffer = new byte[client.ReceiveBufferSize];
+            _binaryFormatter.Serialize(nwStream, obj);
 
-            string dataReceived;
-            //ToDo: split text send and recieve to a different function, before changing to receiving objects
-            do
-            {
-                //---read incoming stream---
-                try
-                {
-                    int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize);
-                    //---convert the data received into a string---
-                    dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine("Received : " + dataReceived);
-
-                    //---write back the text to the client---
-                    Console.WriteLine("Sending to all clients : " + dataReceived);
-                    SendToAllClients(dataReceived);
-                }
-                catch
-                {
-                    break;
-                }
-
-
-            }
-            while (!dataReceived.ToLower().Contains("exit!"));
-            //ToDo: to send & recieve repeatedly, should find a way to loop the send & receive 
-            //      and take the client.close() out of the loop
-            removeUserFromMembersDB(client);
-            client.Close();
         }
-        //private bool registerClient(TcpClient client) // Deprecated
-        //{
 
-        //    NetworkStream nwStream = client.GetStream();
-        //    byte[] buffer = new byte[client.ReceiveBufferSize];
 
-        //    //---read incoming stream---
-        //    int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize);
-
-        //    //---convert the data received into a string---
-        //    string clientName = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-        //    if (tryAddClientToList(clientName, client))
-        //    {
-        //        byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes($"Welcome, {clientName}");
-        //        connectionEstablishedPrint(client, clientName);
-        //        //---send the text---
-        //        nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-        //        SendToAllClients($"{clientName} joined!");
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes($"{clientName} name is already taken");
-        //        //---send the text---
-        //        nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-        //        return false;
-        //    }
-
-        //} 
     }
 }
