@@ -83,12 +83,12 @@ namespace TeslaClient
                         {
                             while (!_chatRoomExitToken)
                             {
-                                ReceiveMessages(nwStream, chatMember);
+                                ReceiveMessages(chatMember);
                             }
                         });
                         while (!_chatRoomExitToken)
                         {
-                            WriteAMessage(nwStream, chatMember);
+                            WriteAMessage(chatMember);
                         }
                     }
                 }
