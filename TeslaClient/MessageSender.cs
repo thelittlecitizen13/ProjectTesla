@@ -16,12 +16,14 @@ namespace TeslaClient
         private IFormatter _binaryFormatter;
         private OutputManager _outputManeger;
         private InputManager _inputManager;
-        public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager)
+        private string _name;
+        public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager, string name)
         {
             _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
             _outputManeger = outputManager;
             _inputManager = inputManager;
+            _name = name;
         }
         public void SendNewMessage()
         {
@@ -30,19 +32,19 @@ namespace TeslaClient
             if (_inputManager.IsSendPicture(msg))
             {
                 if (_inputManager.IsSendScreenShot(msg))
-                    SendNewImageMessage(new ClientData("all"), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
+                    SendNewImageMessage(new ClientData(_name), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
                 else
                 {
                     string imgPath = System.Text.RegularExpressions.Regex.Split(msg, ";")[1];
                     if (_inputManager.IsFileExists(imgPath))
-                        SendNewImageMessage(imgPath, new ClientData("all"), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
+                        SendNewImageMessage(imgPath, new ClientData(_name), new ClientData("all")); // ToDo: get real ClientData when sending to users privately
                     else
                         _outputManeger.DisplayText("Error - img not found");
                 }
             }
             else
             {
-                SendNewTextMessage(msg, new ClientData("all"), new ClientData("all"));
+                SendNewTextMessage(msg, new ClientData(_name), new ClientData("all"));
             }
 
         }

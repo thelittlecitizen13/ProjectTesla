@@ -4,6 +4,7 @@ using System.Text;
 
 namespace TeslaCommon
 {
+    [Serializable]
     public class ClientData
     {
         public string UID { get; set; }
