@@ -26,7 +26,9 @@ namespace TeslaClient
         }
         public MemberData GetContactByName(string name)
         {
-            return ContactsDB.ContactList[name];
+            if (ContactsDB.ContactList.ContainsKey(name))
+                return ContactsDB.ContactList[name];
+            return null;
         }
     }
 }

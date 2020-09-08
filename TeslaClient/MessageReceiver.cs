@@ -29,7 +29,7 @@ namespace TeslaClient
             {
                 processTextMessage((TextMessage)msg);
                 return;
-            }                        
+            }
             if (msg is ImageMessage)
             {
                 processImageMessage((ImageMessage)msg);
@@ -63,26 +63,27 @@ namespace TeslaClient
         {
             try
             {
+                _binaryFormatter = new BinaryFormatter();
                 var dataReceived = _binaryFormatter.Deserialize(_nwStream);
                 return (IMessage)dataReceived;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message); // Debug
                 return null;
             }
-            
-        }
-        
-        public void Run()
-        {
-                IMessage msg = ReceiveAMessage();
-                if (msg == null)
-                    return;
-                processMessage(msg);
-            }
-            
-            
+
         }
 
+        public void Run()
+        {
+            IMessage msg = ReceiveAMessage();
+            if (msg == null)
+                return;
+            processMessage(msg);
+        }
+
+
     }
+
 }

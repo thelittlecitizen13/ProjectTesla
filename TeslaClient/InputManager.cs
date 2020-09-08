@@ -31,10 +31,11 @@ namespace TeslaClient
         {
             return (File.Exists(filePath));
         }
-        public string ValidateContactChoose(Contacts contacts)
+        public string ValidateContactChoose(ContactsManager contactsManager)
         {
             string choose = Console.ReadLine();
-            while(!contacts.ContactList.ContainsKey(choose) || choose.ToLower() != "exit")
+
+            while(choose.ToLower() == "/exit" || contactsManager.GetContactByName(choose) == null)
             {
                 _outputManager.DisplayText("Contact not found. Please try again");
                 choose = Console.ReadLine();

@@ -40,8 +40,10 @@ namespace TeslaServer
                 connectionEstablishedPrint(client, clientName);
                 TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("Server"), new MemberData("all"));
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
+                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new MemberData("Server"), _contactsDB.ContactList["Everyone"]);
+                deliverMessageToDestination(newContactsDBMessage);
                 SendToAllClients(new TextMessage($"{clientName} joined the chat!", new MemberData("Server"), new MemberData("all")));
-                SendToAllClients(new ContactsMessage(_contactsDB, new MemberData("Server"), new MemberData("all"))); // ToDo: move to a function with indicative name
+                
                 return true;
             }
             else
@@ -174,9 +176,12 @@ namespace TeslaServer
                 }
                 return;
             }
+            Console.WriteLine("No such member"); //Debugging
         }
         private void sendMessageToUser(NetworkStream nwStream, object obj)
         {
+            Console.WriteLine($"Sending a message with type of {obj.GetType()}");
+            _binaryFormatter = new BinaryFormatter();
             _binaryFormatter.Serialize(nwStream, obj);
 
         }

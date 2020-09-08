@@ -47,16 +47,18 @@ namespace TeslaClient
             else
                 _chatRoomExitToken = true;
         }
-        private void ReceiveMessages(MemberData currentChatMember)
+        private void ReceiveMessages()
         {
             _messageReceiver.Run();
         }
         
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
-            _messageSender.SendNewTextMessage(Name, _clientData, new MemberData("all"));
+            _messageSender.SendNewTextMessage(Name, _clientData, _contactsManager.GetContactByName("Everyone"));
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
+            ContactsMessage contactsMessage = (ContactsMessage)_messageReceiver.ReceiveAMessage();
+            _contactsManager.UpdateContactsDB(contactsMessage.ContactList);
         }
         private void displayContactMenu()
         {
@@ -71,21 +73,23 @@ namespace TeslaClient
                 using (NetworkStream nwStream = _client.GetStream())
                 {
                     registerToServerWithMessage(nwStream);
+                    ThreadPool.QueueUserWorkItem(obj =>
+                    {
+                        while (true)
+                        {
+                            ReceiveMessages();
+                        }
+                    });
                     while (true)
                     {
+                        _chatRoomExitToken = false;
                         displayContactMenu();
-                        string choice = _inputManager.ValidateContactChoose(_contactsManager.ContactsDB);
+                        string choice = _inputManager.ValidateContactChoose(_contactsManager);
                         if (choice.ToLower() == EXIT_COMMAND)
                             break;
                         MemberData chatMember = _contactsManager.GetContactByName(choice);
-                        //ToDo: Access private chat rooms from here
-                        ThreadPool.QueueUserWorkItem(obj =>
-                        {
-                            while (!_chatRoomExitToken)
-                            {
-                                ReceiveMessages(chatMember);
-                            }
-                        });
+                        
+                        
                         while (!_chatRoomExitToken)
                         {
                             WriteAMessage(chatMember);
@@ -100,17 +104,9 @@ namespace TeslaClient
             finally
             {
                 _client.Close();
+                Console.ReadLine();
             }
         }
         
-        private void registerToServer(NetworkStream nwStream) //Deprecated
-        {
-
-            byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(Name);
-            nwStream.Write(bytesToSend, 0, bytesToSend.Length);
-            byte[] bytesToRead = new byte[_client.ReceiveBufferSize];
-            int bytesRead = nwStream.Read(bytesToRead, 0, _client.ReceiveBufferSize);
-            Console.WriteLine(Encoding.ASCII.GetString(bytesToRead, 0, bytesRead));
-        }
     }
 }

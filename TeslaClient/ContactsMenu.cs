@@ -17,7 +17,7 @@ namespace TeslaClient
                 sb.AppendLine(contact);
             }
             sb.AppendLine("Enter contact name to start a chat with");
-            sb.AppendLine("Type exit to exit Tesla");
+            sb.AppendLine("Type /exit to exit Tesla");
             Menu = sb.ToString();
         }
     }
