@@ -66,7 +66,7 @@ namespace TeslaServer
                     {
                         if (registerClient(client))
                         {
-                            receiveMessagesAsText(client);
+                            receiveMessage(client);
                         }
                         else
                         {
@@ -130,6 +130,15 @@ namespace TeslaServer
                 nwStream.Write(bytesToSend, 0, bytesToSend.Length);
             }
         }
+        private void SendToAllClients(byte[] bytesToSend)
+        {
+            foreach (var client_port in _clientsList)
+            {
+                NetworkStream nwStream = client_port.Value.GetStream();
+
+                nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+            }
+        }
         private void receiveMessagesAsText(TcpClient client)
         {
             //---get the incoming data through a network stream---
@@ -160,6 +169,41 @@ namespace TeslaServer
 
             }
             while (!dataReceived.ToLower().Contains("exit!"));
+            //ToDo: to send & recieve repeatedly, should find a way to loop the send & receive 
+            //      and take the client.close() out of the loop
+            removeClientFromList(client);
+            client.Close();
+        }
+        private void receiveMessage(TcpClient client)
+        {
+            //---get the incoming data through a network stream---
+            NetworkStream nwStream = client.GetStream();
+            byte[] buffer = new byte[client.ReceiveBufferSize];
+
+            string dataReceived;
+            //ToDo: split text send and recieve to a different function, before changing to receiving objects
+            do
+            {
+                //---read incoming stream---
+                try
+                {
+                    int bytesRead = nwStream.Read(buffer, 0, client.ReceiveBufferSize);
+                    byte[] truncArray = new byte[bytesRead];
+                    Array.Copy(buffer, truncArray, truncArray.Length);
+
+                    //---write back the text to the client---
+                    Console.WriteLine("Sending to all clients : ");
+                    SendToAllClients(truncArray);
+                }
+                catch
+                {
+                    break;
+                }
+
+
+            }
+            while (true); // ToDo: find a way to change it - maybe to create searlization class
+            //while (!dataReceived.ToLower().Contains("exit!"));
             //ToDo: to send & recieve repeatedly, should find a way to loop the send & receive 
             //      and take the client.close() out of the loop
             removeClientFromList(client);
