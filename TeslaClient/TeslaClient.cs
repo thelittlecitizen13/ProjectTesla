@@ -43,11 +43,13 @@ namespace TeslaClient
         private void WriteAMessage(IMemberData currentChatMember)
         {
             // ToDo: print you are now in a chat room with..
+            
             _outputManager.DisplayText("Enter your message");
             string msg = _inputManager.GetUserInput();
             if (msg.ToLower() == EXIT_COMMAND)
             {
                 _chatRoomExitToken = true;
+                _messageReceiver.SetCurrentMemberChat(null);
                 return;
             }
             if(msg.ToLower() == "/help")
@@ -114,6 +116,8 @@ namespace TeslaClient
                     {
                         _chatRoomExitToken = false;
                         displayContactMenu();
+                        IMemberData chatMember = ContactsMan.GetContactByName("Everyone");
+                        _messageReceiver.ShowUnSeenMessages();
                         string choice = _inputManager.ValidateContactChoose(ContactsMan);
                         if (choice.ToLower() == EXIT_COMMAND)
                             break;
@@ -131,11 +135,15 @@ namespace TeslaClient
                             _messageSender.HandleUserCommands(choice);
                             continue;
                         }
-                        IMemberData chatMember = ContactsMan.GetContactByName(choice);
+                         chatMember = ContactsMan.GetContactByName(choice);
+                        _messageReceiver.SetCurrentMemberChat(chatMember);
+                        _messageReceiver.ShowUnSeenMessages();
                         while (!_chatRoomExitToken)
                         {
                             WriteAMessage(chatMember);
                         }
+                        
+
                     }
                 }
             }

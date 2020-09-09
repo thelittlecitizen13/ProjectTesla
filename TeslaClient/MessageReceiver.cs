@@ -14,7 +14,9 @@ namespace TeslaClient
         private IFormatter _binaryFormatter;
         private OutputManager _outputManager;
         private ContactsManager _contactsManager;
-        public IMemberData currentChatMember;
+        private IMemberData _currentChatMember;
+        private object _currentMemberLocker = new object();
+        public ChatHistories LocalChatHistories { get; set; }
 
         public MessageReceiver(NetworkStream networkStream, OutputManager outputManager, ContactsManager contactsManager)
         {
@@ -22,18 +24,25 @@ namespace TeslaClient
             _binaryFormatter = new BinaryFormatter();
             _outputManager = outputManager;
             _contactsManager = contactsManager;
+            LocalChatHistories = new ChatHistories();
         }
 
         private void processMessage(IMessage msg)
         {
             if (msg is TextMessage)
             {
-                processTextMessage((TextMessage)msg);
+                if (GetCurrentChatMember() != null && msg.Source.Equals(GetCurrentChatMember()))
+                    processTextMessage((TextMessage)msg);
+                else
+                    LocalChatHistories.AddToChatHistory(msg);
                 return;
             }
             if (msg is GroupMessage)
             {
-                processGroupMessage((GroupMessage)msg);
+                if (msg.Source.Equals(GetCurrentChatMember()))
+                    processGroupMessage((GroupMessage)msg);
+                else
+                    LocalChatHistories.AddToChatHistory(msg);
                 return;
             }
             if (msg is GroupUpdateMessage)
@@ -43,7 +52,10 @@ namespace TeslaClient
             }
             if (msg is ImageMessage)
             {
-                processImageMessage((ImageMessage)msg);
+                if (msg.Source.Equals(GetCurrentChatMember()))
+                    processImageMessage((ImageMessage)msg);
+                else
+                    LocalChatHistories.AddToChatHistory(msg);
                 return;
             }
             if (msg is ContactsMessage)
@@ -103,8 +115,32 @@ namespace TeslaClient
             Console.WriteLine(msg.GetType()); //debug
             processMessage(msg);
         }
+        public void ShowUnSeenMessages()
+        {
+            IMessage oldMessage = null;
+            do
+            {
+                oldMessage = LocalChatHistories.GetLastMessage(GetCurrentChatMember());
+                if (oldMessage != null)
+                    processMessage(oldMessage);
+            }
+            while (oldMessage != null);
+        }
 
-
+        public IMemberData GetCurrentChatMember()
+        {
+            lock(_currentMemberLocker)
+            {
+                return _currentChatMember;
+            }   
+        }
+        public void SetCurrentMemberChat(IMemberData currentMember)
+        {
+            lock (_currentMemberLocker)
+            {
+                _currentChatMember = currentMember;
+            }
+        }
     }
 
 }
