@@ -148,14 +148,15 @@ namespace TeslaServer
             if (message.GetType() == typeof(GroupUpdateMessage))
             {
                 processGroupUpdateMessage((GroupUpdateMessage)message);
+                return;
             }
-            if (message.GetType() != typeof(CommandMessage))
+            if (message.GetType() == typeof(CommandMessage))
             {
                 // ToDo: Handle command messages
                 return;
             }
             deliverMessageToDestination(message);
-            
+
 
         }
         private void processGroupUpdateMessage(GroupUpdateMessage message)
@@ -252,10 +253,13 @@ namespace TeslaServer
             if (message.GetType() == typeof(GroupMessage))
             {
                 sendGroupMessage(message);
+                Console.WriteLine($"message sent to {message.Source.Name}"); //debug
             }
-            if (message.GetType() == typeof(TextMessage))
+            else
+            //if (message.GetType() == typeof(TextMessage))
             {
                 sendTextMessage(message);
+                Console.WriteLine($"message sent to {message.Source.Name}"); //debug
             }
 
         }

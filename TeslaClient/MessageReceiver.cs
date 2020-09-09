@@ -99,6 +99,7 @@ namespace TeslaClient
             IMessage msg = ReceiveAMessage();
             if (msg == null)
                 return;
+            Console.WriteLine(msg.GetType()); //debug
             processMessage(msg);
         }
 

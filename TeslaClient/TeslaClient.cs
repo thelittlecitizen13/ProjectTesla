@@ -97,10 +97,18 @@ namespace TeslaClient
                     registerToServerWithMessage(nwStream);
                     ThreadPool.QueueUserWorkItem(obj =>
                     {
-                        while (true)
+                        try 
                         {
-                            ReceiveMessages();
+                            while (true)
+                            {
+                                ReceiveMessages();
+                            }
                         }
+                        catch (Exception e)
+                        {
+                            _outputManager.DisplayText(e.Message);
+                        }
+                        
                     });
                     while (true)
                     {
