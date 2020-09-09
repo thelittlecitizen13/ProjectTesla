@@ -30,6 +30,14 @@ namespace TeslaClient
                 processTextMessage((TextMessage)msg);
                 return;
             }
+            if (msg is GroupMessage)
+            {
+                processGroupMessage((GroupMessage)msg);
+            }
+            if (msg is GroupUpdateMessage)
+            {
+
+            }
             if (msg is ImageMessage)
             {
                 processImageMessage((ImageMessage)msg);
@@ -47,7 +55,11 @@ namespace TeslaClient
             string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.Name}: {msg.Message}";
             _outputManager.DisplayText(textToShow);
         }
-
+        private void processGroupMessage(GroupMessage msg)
+        {
+            string textToShow = $"{msg.MessageTime.ToString()} - {msg.Author.Name}: {msg.Message}";
+            _outputManager.DisplayText(textToShow);
+        }
         private void processImageMessage(ImageMessage msg)
         {
             string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.Name}: Image Received";
