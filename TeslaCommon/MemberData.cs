@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace TeslaCommon
@@ -8,10 +8,10 @@ namespace TeslaCommon
     public class MemberData : IMemberData
     {
         public string UID { get; set; }
-        public string MemberName { get; set; }
+        public string Name { get; set; }
         public MemberData(string memberName)
         {
-            MemberName = memberName;
+            Name = memberName;
             UID = Guid.NewGuid().ToString();
         }
     }
