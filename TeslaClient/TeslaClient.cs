@@ -13,14 +13,14 @@ namespace TeslaClient
         private IPAddress _serverAddress;
         private int _port;
         private TcpClient _client;
-        public string Name;
         private MessageSender _messageSender;
         private MessageReceiver _messageReceiver;
         private OutputManager _outputManager;
         private InputManager _inputManager;
-        private UserData _clientData;
-        private ContactsManager _contactsManager;
         private bool _chatRoomExitToken;
+        public ContactsManager ContactsMan;
+        public string Name;
+        public UserData ClientData;
 
         public TeslaClient(string address, int port, int clientNumber)
         {
@@ -30,10 +30,10 @@ namespace TeslaClient
             _client = new TcpClient(_serverAddress.ToString(), _port);
             _outputManager = new OutputManager(Name);
             _inputManager = new InputManager(_outputManager);
-            _contactsManager = new ContactsManager();
-            _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager, _contactsManager);
+            ContactsMan = new ContactsManager();
+            _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager, ContactsMan);
             _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
-            _clientData = new UserData(Name);
+            ClientData = new UserData(Name);
             _chatRoomExitToken = false;
             
         }
@@ -49,9 +49,9 @@ namespace TeslaClient
                 return;
             }
             if (currentChatMember.GetType() == typeof(GroupData))
-                _messageSender.SendNewMessage(msg, currentChatMember, currentChatMember, _clientData);
+                _messageSender.SendNewMessage(msg, currentChatMember, currentChatMember, ClientData);
             else
-                _messageSender.SendNewMessage(msg, currentChatMember, _clientData, _clientData);
+                _messageSender.SendNewMessage(msg, currentChatMember, ClientData, ClientData);
         }
         private void ReceiveMessages()
         {
@@ -61,19 +61,19 @@ namespace TeslaClient
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
             //IMemberData EveryOneGroup = _contactsManager.GetContactByName("Everyone");
-            _messageSender.SendNewMessage(Name, new UserData("Server") , _clientData, _clientData); 
+            _messageSender.SendNewMessage(Name, new UserData("Server") , ClientData, ClientData); 
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
             ContactsMessage contactsMessage = (ContactsMessage)_messageReceiver.ReceiveAMessage(); 
-            _contactsManager.UpdateContactsDB(contactsMessage.ContactList);
+            ContactsMan.UpdateContactsDB(contactsMessage.ContactList);
         }
         private void displayContactMenu()
         {
-            _outputManager.DisplayText(_contactsManager.ContactsMenu.Menu);
+            _outputManager.DisplayText(ContactsMan.ContactsMenu.Menu);
         }
         public void Run()
         {
-            _contactsManager.UpdateContactsDB();
+            ContactsMan.UpdateContactsDB();
             try
             {
                 using (NetworkStream nwStream = _client.GetStream())
@@ -90,10 +90,10 @@ namespace TeslaClient
                     {
                         _chatRoomExitToken = false;
                         displayContactMenu();
-                        string choice = _inputManager.ValidateContactChoose(_contactsManager);
+                        string choice = _inputManager.ValidateContactChoose(ContactsMan);
                         if (choice.ToLower() == EXIT_COMMAND)
                             break;
-                        IMemberData chatMember = _contactsManager.GetContactByName(choice);
+                        IMemberData chatMember = ContactsMan.GetContactByName(choice);
                         while (!_chatRoomExitToken)
                         {
                             WriteAMessage(chatMember);
