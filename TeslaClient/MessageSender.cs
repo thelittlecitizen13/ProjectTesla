@@ -25,32 +25,41 @@ namespace TeslaClient
             _inputManager = inputManager;
             _name = name;
         }
-        public void SendNewMessage(string msg, UserData currentChatMember, UserData currentClient)
+        public void SendNewMessage(string msg, IMemberData destinationMember, IMemberData sourceMember, UserData messageAuthor)
         {
-            
+            // Should refactor
+            if (destinationMember.GetType() == typeof(GroupData))
+            {
+                SendNewGroupMessage(msg, messageAuthor, (GroupData)sourceMember, (GroupData)destinationMember);
+                return;
+            }
             if (_inputManager.IsSendPicture(msg))
             {
                 if (_inputManager.IsSendScreenShot(msg))
-                    SendNewImageMessage(currentClient, currentChatMember);
+                    SendNewImageMessage((UserData)sourceMember, (UserData)destinationMember);
                 else
                 {
                     string imgPath = System.Text.RegularExpressions.Regex.Split(msg, ";")[1];
                     if (_inputManager.IsFileExists(imgPath))
-                        SendNewImageMessage(imgPath, currentClient, currentChatMember);
+                        SendNewImageMessage(imgPath, (UserData)sourceMember, (UserData)destinationMember);
                     else
                         _outputManager.DisplayText("Error - img not found");
                 }
             }
             else
             {
-                SendNewTextMessage(msg, currentClient, currentChatMember);
+                SendNewTextMessage(msg, (UserData)sourceMember, (UserData)destinationMember);
             }
 
         }
         public void SendNewTextMessage(string text, UserData src, UserData dst)
         {
-            // ToDo: change the SRC and DST to real 
             IMessage message = new TextMessage(text, src, dst);
+            _binaryFormatter.Serialize(_nwStream, message);
+        }
+        public void SendNewGroupMessage(string text, UserData author, GroupData src, GroupData dst)
+        {
+            IMessage message = new GroupMessage(text, author, src, dst);
             _binaryFormatter.Serialize(_nwStream, message);
         }
         public void SendNewImageMessage(UserData src, UserData dst)

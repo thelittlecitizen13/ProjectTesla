@@ -146,12 +146,16 @@ namespace TeslaServer
         {
             if (message.GetType() == typeof(GroupUpdateMessage))
             {
-
+                // ToDo: Handle group update messages
             }
             if (message.GetType() != typeof(CommandMessage))
-                deliverMessageToDestination(message);
-            // ToDo: Handle command messages
+            {
+                // ToDo: Handle command messages
+                return;
+            }
+            deliverMessageToDestination(message);
             
+
         }
         private void deliverMessageToDestination(IMessage message)
         {

@@ -14,7 +14,11 @@ namespace TeslaClient
             sb.AppendLine("To whom would you like to send a message");
             foreach (var contact in contacts.UsersList.Keys)
             {
-                sb.AppendLine(contact);
+                sb.AppendLine($"User - {contact}");
+            }
+            foreach (var contact in contacts.GroupsList.Keys)
+            {
+                sb.AppendLine($"Group - {contact}");
             }
             sb.AppendLine("Enter contact name to start a chat with");
             sb.AppendLine("Type /exit to exit Tesla");

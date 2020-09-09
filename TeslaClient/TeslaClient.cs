@@ -38,14 +38,20 @@ namespace TeslaClient
             
         }
 
-        private void WriteAMessage(UserData currentChatMember)
+        private void WriteAMessage(IMemberData currentChatMember)
         {
+            // ToDo: print you are now in a chat room with..
             _outputManager.DisplayText("Enter your message");
             string msg = _inputManager.GetUserInput();
-            if (msg.ToLower() != EXIT_COMMAND)
-                _messageSender.SendNewMessage(msg, currentChatMember, _clientData);
-            else
+            if (msg.ToLower() == EXIT_COMMAND)
+            {
                 _chatRoomExitToken = true;
+                return;
+            }
+            if (currentChatMember.GetType() == typeof(GroupData))
+                _messageSender.SendNewMessage(msg, currentChatMember, currentChatMember, _clientData);
+            else
+                _messageSender.SendNewMessage(msg, currentChatMember, _clientData, _clientData);
         }
         private void ReceiveMessages()
         {
@@ -54,10 +60,11 @@ namespace TeslaClient
         
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
-            _messageSender.SendNewTextMessage(Name, _clientData, _contactsManager.GetContactByName("Everyone"));
+            //IMemberData EveryOneGroup = _contactsManager.GetContactByName("Everyone");
+            _messageSender.SendNewMessage(Name, new UserData("Server") , _clientData, _clientData); 
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
-            ContactsMessage contactsMessage = (ContactsMessage)_messageReceiver.ReceiveAMessage();
+            ContactsMessage contactsMessage = (ContactsMessage)_messageReceiver.ReceiveAMessage(); 
             _contactsManager.UpdateContactsDB(contactsMessage.ContactList);
         }
         private void displayContactMenu()
@@ -67,7 +74,6 @@ namespace TeslaClient
         public void Run()
         {
             _contactsManager.UpdateContactsDB();
-            //bool _menuExitToken = false;
             try
             {
                 using (NetworkStream nwStream = _client.GetStream())
@@ -87,9 +93,7 @@ namespace TeslaClient
                         string choice = _inputManager.ValidateContactChoose(_contactsManager);
                         if (choice.ToLower() == EXIT_COMMAND)
                             break;
-                        UserData chatMember = _contactsManager.GetContactByName(choice);
-                        
-                        
+                        IMemberData chatMember = _contactsManager.GetContactByName(choice);
                         while (!_chatRoomExitToken)
                         {
                             WriteAMessage(chatMember);

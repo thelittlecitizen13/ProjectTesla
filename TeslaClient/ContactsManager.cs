@@ -24,10 +24,12 @@ namespace TeslaClient
         {
             ContactsMenu.CreateMenu(ContactsDB);
         }
-        public UserData GetContactByName(string name)
+        public IMemberData GetContactByName(string name)
         {
             if (ContactsDB.UsersList.ContainsKey(name))
                 return ContactsDB.UsersList[name];
+            if (ContactsDB.GroupsList.ContainsKey(name))
+                return ContactsDB.GroupsList[name];
             return null;
         }
     }
