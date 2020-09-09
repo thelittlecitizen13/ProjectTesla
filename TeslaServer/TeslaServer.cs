@@ -207,6 +207,8 @@ namespace TeslaServer
         {
             GroupData changedGroup = message.GroupChanged;
             _contactsDB.AddGroup(changedGroup);
+            Group newGroup = new Group(changedGroup);
+            _membersDB.AddGroup(newGroup);
             sendCustomMessage((UserData)message.Source, "Group created successfully.");
             updateUsersAboutGroupChange(message);
         }
@@ -216,6 +218,7 @@ namespace TeslaServer
             _contactsDB.RemoveUserFromGroup(changedGroup, (UserData)message.Source);
             sendCustomMessage((UserData)message.Source, "Left group successfully.");
             message.typeOfChange = ChangeType.Update;
+            _membersDB.UpdateGroup(changedGroup);
             updateUsersAboutGroupChange(message);
         }
         private void updateGroup(GroupUpdateMessage message)
@@ -223,6 +226,7 @@ namespace TeslaServer
             GroupData changedGroup = message.GroupChanged;
             if(_contactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
             {
+                _membersDB.UpdateGroup(changedGroup);
                 sendCustomMessage((UserData)message.Source, "Group updated successfully.");
                 updateUsersAboutGroupChange(message);
                 return;
@@ -236,7 +240,9 @@ namespace TeslaServer
             
             if (_contactsDB.TryRemoveGroup(changedGroup, (UserData)message.Source))
             {
+                
                 updateUsersAboutGroupChange(message);
+                _membersDB.RemoveGroup(changedGroup.Name);
                 sendCustomMessage((UserData)message.Source, "Group deleted successfully.");
                 return;
             }

@@ -71,6 +71,19 @@ namespace TeslaServer
                 return TeslaGroups[GroupUID];
             return null;
         }
+        public bool UpdateGroup(GroupData groupData)
+        {
+            try
+            {
+                TeslaGroups[groupData.UID] = new Group(groupData);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            
+        }
 
 
     }
