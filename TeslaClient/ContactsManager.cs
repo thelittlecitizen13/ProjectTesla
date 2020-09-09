@@ -17,7 +17,7 @@ namespace TeslaClient
         }
         public void UpdateContactsDB(Contacts contacts)
         {
-            ContactsDB.ContactList = contacts.ContactList;
+            ContactsDB.UsersList = contacts.UsersList;
             ContactsMenu.CreateMenu(ContactsDB);
         }
         public void UpdateContactsDB()
@@ -26,8 +26,8 @@ namespace TeslaClient
         }
         public UserData GetContactByName(string name)
         {
-            if (ContactsDB.ContactList.ContainsKey(name))
-                return ContactsDB.ContactList[name];
+            if (ContactsDB.UsersList.ContainsKey(name))
+                return ContactsDB.UsersList[name];
             return null;
         }
     }

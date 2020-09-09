@@ -35,12 +35,12 @@ namespace TeslaServer
             TextMessage dataReceived = (TextMessage)_binaryFormatter.Deserialize(nwStream);
             User newUser = new User((UserData)dataReceived.Source, client);
             string clientName = dataReceived.Source.Name;
-            if (_membersDB.AddUser(newUser) && _contactsDB.AddContact((UserData)newUser.Data))
+            if (_membersDB.AddUser(newUser) && _contactsDB.AddUser((UserData)newUser.Data))
             {
                 connectionEstablishedPrint(client, clientName);
                 TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new UserData("Server"), new UserData("all"));
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
-                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new UserData("Server"), _contactsDB.ContactList["Everyone"]);
+                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new UserData("Server"), _contactsDB.UsersList["Everyone"]);
                 deliverMessageToDestination(newContactsDBMessage);
                 SendToAllClients(new TextMessage($"{clientName} joined the chat!", new UserData("Server"), new UserData("all")));
                 
@@ -97,7 +97,7 @@ namespace TeslaServer
         private void removeUserFromMembersDB(TcpClient client)
         {
             User removedUser = _membersDB.RemoveUser(client);
-            _contactsDB.RemoveContact((UserData)removedUser.Data);
+            _contactsDB.RemoveUser((UserData)removedUser.Data);
             if (removedUser != null)
             {
                 SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new UserData("Server"), new UserData("all")));

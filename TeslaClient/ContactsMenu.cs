@@ -12,7 +12,7 @@ namespace TeslaClient
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("To whom would you like to send a message");
-            foreach (var contact in contacts.ContactList.Keys)
+            foreach (var contact in contacts.UsersList.Keys)
             {
                 sb.AppendLine(contact);
             }
