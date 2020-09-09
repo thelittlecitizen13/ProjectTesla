@@ -40,9 +40,10 @@ namespace TeslaServer
                 connectionEstablishedPrint(client, clientName);
                 TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new UserData("Server"), new UserData("all"));
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
-                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new UserData("Server"), _contactsDB.UsersList["Everyone"]);
-                deliverMessageToDestination(newContactsDBMessage);
-                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new UserData("Server"), new UserData("all")));
+                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new UserData("Server"), new UserData("all")); // refactor!!
+                //deliverMessageToDestination(newContactsDBMessage);
+                SendToAllClients(newContactsDBMessage);
+                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new UserData("Server"), new UserData("all"))); //refactor!!
                 
                 return true;
             }
@@ -146,7 +147,7 @@ namespace TeslaServer
         {
             if (message.GetType() == typeof(GroupUpdateMessage))
             {
-                // ToDo: Handle group update messages
+                processGroupUpdateMessage((GroupUpdateMessage)message);
             }
             if (message.GetType() != typeof(CommandMessage))
             {
@@ -156,6 +157,93 @@ namespace TeslaServer
             deliverMessageToDestination(message);
             
 
+        }
+        private void processGroupUpdateMessage(GroupUpdateMessage message)
+        {
+            switch (message.typeOfChange)
+            {
+                case ChangeType.Create:
+                    createNewGroup(message);
+                    break;
+                case ChangeType.Update:
+                    updateGroup(message);
+                    break;
+                case ChangeType.Leave:
+                    leaveGroup(message);
+                    break;
+                case ChangeType.Delete:
+                    removeGroup(message);
+                    break;
+                default:
+                    sendCustomMessage(message.Source, "Bad request");
+                    break;
+            }
+            // ToDo: update groups
+        }
+        private void updateUsersAboutGroupChange(GroupUpdateMessage message)
+        {
+            // updates group members about the change
+            List<UserData> groupUsers = message.GroupChanged.Users;
+            foreach (var groupMember in groupUsers)
+            {
+                User user = _membersDB.GetUser(groupMember.UID);
+                Console.WriteLine($"user {groupMember.Name} is in the group");
+                if (user != null)
+                {
+                    Console.WriteLine($"user {user.Name} updated about group change");
+                    _binaryFormatter = new BinaryFormatter();
+                    _binaryFormatter.Serialize(user.nwStream, message);
+                }
+            }
+        }
+        private void sendCustomMessage(IMemberData destinationUser, string msg)
+        {
+            User userInGroup = _membersDB.GetUser(destinationUser.UID);
+            TextMessage badRequestMessage = new TextMessage(msg, new UserData("Server"), (UserData)destinationUser);
+            sendMessageToUser(userInGroup.nwStream, badRequestMessage);
+        }
+        private void createNewGroup(GroupUpdateMessage message)
+        {
+            GroupData changedGroup = message.GroupChanged;
+            _contactsDB.AddGroup(changedGroup);
+            sendCustomMessage((UserData)message.Source, "Group created successfully.");
+            updateUsersAboutGroupChange(message);
+        }
+        private void leaveGroup(GroupUpdateMessage message)
+        {
+            GroupData changedGroup = message.GroupChanged;
+            _contactsDB.RemoveUserFromGroup(changedGroup, (UserData)message.Source);
+            sendCustomMessage((UserData)message.Source, "Left group successfully.");
+            message.typeOfChange = ChangeType.Update;
+            updateUsersAboutGroupChange(message);
+        }
+        private void updateGroup(GroupUpdateMessage message)
+        {
+            GroupData changedGroup = message.GroupChanged;
+            if(_contactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
+            {
+                sendCustomMessage((UserData)message.Source, "Group updated successfully.");
+                updateUsersAboutGroupChange(message);
+                return;
+            }
+            sendNotAuthorizedMessage((UserData)message.Source);
+        }
+        private void removeGroup(GroupUpdateMessage message)
+        {
+            
+            GroupData changedGroup = message.GroupChanged;
+            
+            if (_contactsDB.TryRemoveGroup(changedGroup, (UserData)message.Source))
+            {
+                updateUsersAboutGroupChange(message);
+                sendCustomMessage((UserData)message.Source, "Group deleted successfully.");
+                return;
+            }
+            sendNotAuthorizedMessage((UserData)message.Source);
+        }
+        private void sendNotAuthorizedMessage(UserData destination)
+        {
+            sendCustomMessage(destination, "You are not authorized to do this action!");
         }
         private void deliverMessageToDestination(IMessage message)
         {

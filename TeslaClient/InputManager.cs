@@ -35,10 +35,10 @@ namespace TeslaClient
         {
             string choose = Console.ReadLine();
 
-            while(choose.ToLower() == "/exit" || contactsManager.GetContactByName(choose) == null)
+            while(choose.StartsWith("/") || contactsManager.GetContactByName(choose) == null)
             {
-                if (choose.ToLower() == "/exit")
-                    return "/exit";
+                if (choose.StartsWith("/"))
+                    return choose;
                 _outputManager.DisplayText("Contact not found. Please try again");
                 choose = Console.ReadLine();
             }

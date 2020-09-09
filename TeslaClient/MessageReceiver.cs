@@ -33,10 +33,12 @@ namespace TeslaClient
             if (msg is GroupMessage)
             {
                 processGroupMessage((GroupMessage)msg);
+                return;
             }
             if (msg is GroupUpdateMessage)
             {
-
+                processGroupUpdateMessage((GroupUpdateMessage)msg);
+                return;
             }
             if (msg is ImageMessage)
             {
@@ -59,6 +61,11 @@ namespace TeslaClient
         {
             string textToShow = $"{msg.MessageTime.ToString()} - {msg.Author.Name}: {msg.Message}";
             _outputManager.DisplayText(textToShow);
+        }
+        private void processGroupUpdateMessage(GroupUpdateMessage msg)
+        {
+            _contactsManager.UpdateGroup(msg);
+            _contactsManager.UpdateContactsDB();
         }
         private void processImageMessage(ImageMessage msg)
         {

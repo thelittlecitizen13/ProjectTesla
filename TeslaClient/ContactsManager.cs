@@ -32,5 +32,23 @@ namespace TeslaClient
                 return ContactsDB.GroupsList[name];
             return null;
         }
+        public void UpdateGroup(GroupUpdateMessage message)
+        {
+            GroupData groupChanged = message.GroupChanged;
+            switch(message.typeOfChange)
+            {
+                case ChangeType.Create:
+                    ContactsDB.GroupsList.Add(groupChanged.Name, groupChanged);
+                    break;
+                case ChangeType.Update:
+                    ContactsDB.GroupsList[groupChanged.Name] = groupChanged;
+                    break;
+                case ChangeType.Delete:
+                    ContactsDB.GroupsList.Remove(groupChanged.Name);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

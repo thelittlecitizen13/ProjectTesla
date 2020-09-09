@@ -23,7 +23,7 @@ namespace TeslaCommon
         }
         public void AddUser(UserData userToAdd)
         {
-            Users.Remove(userToAdd);
+            Users.Add(userToAdd);
         }
         public void RemoveManager(UserData managerToRemove)
         {
@@ -31,7 +31,7 @@ namespace TeslaCommon
         }
         public void AddManager(UserData managerToAdd)
         {
-            GroupManagers.Remove(managerToAdd);
+            GroupManagers.Add(managerToAdd);
         }
 
     }

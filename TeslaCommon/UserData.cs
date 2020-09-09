@@ -14,5 +14,10 @@ namespace TeslaCommon
             Name = memberName;
             UID = Guid.NewGuid().ToString();
         }
+        public bool Equals(UserData user)
+        {
+            return Name == user.Name && UID == user.UID;
+        }
     }
+    
 }

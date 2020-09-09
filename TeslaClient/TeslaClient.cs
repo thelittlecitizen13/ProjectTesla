@@ -50,6 +50,11 @@ namespace TeslaClient
                 _chatRoomExitToken = true;
                 return;
             }
+            if(msg.ToLower() == "/help")
+            {
+                _outputManager.DisplayText(_commandManager.GetCommandHelp());
+                return;
+            }
             if (msg.StartsWith("/"))
             {
                 _messageSender.HandleUserCommands(msg);
@@ -78,6 +83,9 @@ namespace TeslaClient
         private void displayContactMenu()
         {
             _outputManager.DisplayText(ContactsMan.ContactsMenu.Menu);
+            _outputManager.DisplayText("Type /help to see available commands (like group controlling)");
+            _outputManager.DisplayText("Type /refresh to refresh contacts");
+            _outputManager.DisplayText("Type /exit to exit");
         }
         public void Run()
         {
@@ -101,6 +109,20 @@ namespace TeslaClient
                         string choice = _inputManager.ValidateContactChoose(ContactsMan);
                         if (choice.ToLower() == EXIT_COMMAND)
                             break;
+                        if (choice.ToLower() == "/help")
+                        {
+                            _outputManager.DisplayText(_commandManager.GetCommandHelp());
+                            continue;
+                        }
+                        if (choice.ToLower() == "/refresh")
+                        {
+                            continue;
+                        }
+                        if (choice.StartsWith("/"))
+                        {
+                            _messageSender.HandleUserCommands(choice);
+                            continue;
+                        }
                         IMemberData chatMember = ContactsMan.GetContactByName(choice);
                         while (!_chatRoomExitToken)
                         {

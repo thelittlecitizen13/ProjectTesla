@@ -13,12 +13,12 @@ namespace TeslaCommon
         public List<UserData> GroupManagers { get; set; }
         
 
-        public Group(UserData memberData)
+        public Group(GroupData memberData)
         {
             Data = memberData;
             Name = memberData.Name;
-            GroupUsers = new List<UserData>();
-            GroupManagers = new List<UserData>();
+            GroupUsers = new List<UserData>(memberData.Users);
+            GroupManagers = new List<UserData>(memberData.GroupManagers);
         }
         public string AddMember(UserData member)
         {

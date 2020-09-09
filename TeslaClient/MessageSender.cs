@@ -115,7 +115,10 @@ namespace TeslaClient
         {
             string[] userArgs = msg.Split(" ");
             IMessage messageFromCommand = _commandManager.GenerateMessageFromCommand(userArgs);
-            SendNewMessage(messageFromCommand);
+            if (messageFromCommand != null)
+                SendNewMessage(messageFromCommand);
+            else
+                _outputManager.DisplayText(_commandManager.GetCommandHelp());
 
         }
     }

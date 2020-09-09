@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using TeslaCommon;
@@ -22,13 +23,20 @@ namespace TeslaClient
         //}
         public IMessage GenerateMessageFromCommand(string[] args)
         {
-            args = args.Select(str => str.ToLower()).ToArray();
-            switch (args[0])
+            try
             {
-                case "/group":
-                    return generateGroupMessage(args);
-                default:
-                    return null;
+                args = args.Select(str => str.ToLower()).ToArray();
+                switch (args[0])
+                {
+                    case "/group":
+                        return generateGroupMessage(args);
+                    default:
+                        return null;
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
         private IMessage generateGroupMessage(string[] args)
@@ -41,6 +49,8 @@ namespace TeslaClient
                     return updateGroupCommand(args);
                 case "remove":
                     return removeGroupCommand(args[2]);
+                case "leave":
+                    return leaveGroupCommand(args[2]);
                 default:
                     return null;
             }
@@ -49,12 +59,26 @@ namespace TeslaClient
         private IMessage createNewGroupCommand(string groupName)
         {
             GroupData newGroup = new GroupData(groupName, _teslaClient.ClientData);
-            return new GroupUpdateMessage(newGroup, ChangeType.Created, _teslaClient.ClientData, new UserData("Server"));
+            return new GroupUpdateMessage(newGroup, ChangeType.Create, _teslaClient.ClientData, new UserData("Server"));
         }
         private IMessage removeGroupCommand(string groupName)
         {
             GroupData groupToRemove = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
-            return new GroupUpdateMessage(groupToRemove, ChangeType.Deleted, _teslaClient.ClientData, new UserData("Server"));
+            return new GroupUpdateMessage(groupToRemove, ChangeType.Delete, _teslaClient.ClientData, new UserData("Server"));
+        }
+        private IMessage leaveGroupCommand(string groupName)
+        {
+            GroupData groupToLeave = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
+            if (groupToLeave != null)
+            {
+                groupToLeave.RemoveUser(_teslaClient.ClientData);
+                groupToLeave = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
+                _teslaClient.ContactsMan.ContactsDB.RemoveGroup(groupToLeave);
+                
+                Console.WriteLine("Leaving group..."); //debug
+                return new GroupUpdateMessage(groupToLeave, ChangeType.Leave, _teslaClient.ClientData, new UserData("Server"));
+            }
+            return null;
         }
         private IMessage updateGroupCommand(string[] args)
         {
@@ -88,11 +112,12 @@ namespace TeslaClient
         }
         private IMessage addUsersToGroupCommand(GroupData groupData, List<UserData> users)
         {
+            GroupData groupToAddAUser = groupData;
             foreach (var user in users)
             {
-                groupData.AddUser(user);
+                groupToAddAUser.AddUser(user);
             }
-            return new GroupUpdateMessage(groupData, ChangeType.Updated, _teslaClient.ClientData, new UserData("Server"));
+            return new GroupUpdateMessage(groupData, ChangeType.Update, _teslaClient.ClientData, new UserData("Server"));
             
         }
         private IMessage removeUsersFromGroupCommand(GroupData groupData, List<UserData> users)
@@ -101,7 +126,7 @@ namespace TeslaClient
             {
                 groupData.RemoveUser(user);
             }
-            return new GroupUpdateMessage(groupData, ChangeType.Updated, _teslaClient.ClientData, new UserData("Server"));
+            return new GroupUpdateMessage(groupData, ChangeType.Update, _teslaClient.ClientData, new UserData("Server"));
 
         }
         private IMessage addManagersToGroupCommand(GroupData groupData, List<UserData> users)
@@ -110,7 +135,7 @@ namespace TeslaClient
             {
                 groupData.AddManager(user);
             }
-            return new GroupUpdateMessage(groupData, ChangeType.Updated, _teslaClient.ClientData, new UserData("Server"));
+            return new GroupUpdateMessage(groupData, ChangeType.Update, _teslaClient.ClientData, new UserData("Server"));
 
         }
         private IMessage removeManagersFromGroupCommand(GroupData groupData, List<UserData> users)
@@ -119,7 +144,7 @@ namespace TeslaClient
             {
                 groupData.RemoveManager(user);
             }
-            return new GroupUpdateMessage(groupData, ChangeType.Updated, _teslaClient.ClientData, new UserData("Server"));
+            return new GroupUpdateMessage(groupData, ChangeType.Update, _teslaClient.ClientData, new UserData("Server"));
 
         }
         public string GetCommandHelp()
@@ -139,6 +164,9 @@ namespace TeslaClient
             sb.AppendLine();
             sb.AppendLine("Remove a group:");
             sb.AppendLine("/group remove [GroupName]");
+            sb.AppendLine();
+            sb.AppendLine("Leave a group:");
+            sb.AppendLine("/group leave [GroupName]");
             sb.AppendLine();
             sb.AppendLine("Note - you have to be the manager of the group to take those actions!");
             return sb.ToString();

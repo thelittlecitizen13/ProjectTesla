@@ -6,8 +6,9 @@ namespace TeslaCommon
 {
     public enum ChangeType
     {
-        Created,
-        Updated,
-        Deleted
+        Create,
+        Update,
+        Leave,
+        Delete
     }
 }

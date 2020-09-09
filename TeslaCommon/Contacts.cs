@@ -27,6 +27,10 @@ namespace TeslaCommon
                 UserData removedMemberData;
                 UsersList.Remove(memberData.Name, out removedMemberData);
             }
+            foreach(var group in GroupsList)
+            {
+
+            }
         }
         public bool AddGroup(GroupData memberData)
         {
@@ -39,6 +43,80 @@ namespace TeslaCommon
                 GroupData removedMemberData;
                 GroupsList.Remove(memberData.Name, out removedMemberData);
             }
+        }
+        public bool TryUpdateGroup(GroupData groupData, UserData commiter)
+        {
+            if (!checkUserPermissionsOnGroup(commiter, groupData))
+            {
+                return false;
+            }
+            try
+            {
+                GroupsList[groupData.Name] = groupData;
+                return true;
+            }
+            catch
+            {
+                Console.WriteLine("Group update failed");
+                return false;
+            }
+        }
+        public bool TryRemoveGroup(GroupData groupData, UserData commiter)
+        {
+            
+            if (!checkUserPermissionsOnGroup(commiter, groupData))
+            {
+                return false;
+            }
+            try
+            {
+                RemoveGroup(groupData);
+                return true;
+            }
+            catch
+            {
+                Console.WriteLine("Group update failed");
+                return false;
+            }
+        }
+        private bool checkUserPermissionsOnGroup(UserData user, GroupData group)
+        {
+            GroupData originalGroup = (GroupData)GetContactByName(group.Name);
+            foreach (var manager in originalGroup.GroupManagers)
+            {
+                if (manager.Equals(user))
+                    return true;
+            }
+            return false;
+        }
+        public IMemberData GetContactByName(string name)
+        {
+            if (UsersList.ContainsKey(name))
+                return UsersList[name];
+            if (GroupsList.ContainsKey(name))
+                return GroupsList[name];
+            return null;
+        }
+        public void RemoveUserFromGroup(GroupData groupData, UserData commiter)
+        {
+            foreach (var user in groupData.Users)
+            {
+                if (commiter.Equals(user))
+                {
+                    groupData.Users.Remove(user);
+                    Console.WriteLine("User left a group"); //debug
+                }
+            }
+            foreach (var manager in groupData.GroupManagers)
+            {
+                if (commiter.Equals(manager))
+                {
+                    groupData.GroupManagers.Remove(manager);
+                    Console.WriteLine("Manager left a group"); //debug
+                }
+            }
+            GroupsList[groupData.Name] = groupData;
+
         }
     }
 }
