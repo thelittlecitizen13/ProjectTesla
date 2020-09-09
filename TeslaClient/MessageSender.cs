@@ -25,7 +25,7 @@ namespace TeslaClient
             _inputManager = inputManager;
             _name = name;
         }
-        public void SendNewMessage(string msg, MemberData currentChatMember, MemberData currentClient)
+        public void SendNewMessage(string msg, UserData currentChatMember, UserData currentClient)
         {
             
             if (_inputManager.IsSendPicture(msg))
@@ -47,18 +47,18 @@ namespace TeslaClient
             }
 
         }
-        public void SendNewTextMessage(string text, MemberData src, MemberData dst)
+        public void SendNewTextMessage(string text, UserData src, UserData dst)
         {
             // ToDo: change the SRC and DST to real 
             IMessage message = new TextMessage(text, src, dst);
             _binaryFormatter.Serialize(_nwStream, message);
         }
-        public void SendNewImageMessage(MemberData src, MemberData dst)
+        public void SendNewImageMessage(UserData src, UserData dst)
         {
             IMessage message = new ImageMessage(takeScreenShot(), src, dst);
             _binaryFormatter.Serialize(_nwStream, message);
         }
-        public void SendNewImageMessage(string imagePath, MemberData src, MemberData dst)
+        public void SendNewImageMessage(string imagePath, UserData src, UserData dst)
         {
             var img = loadImage(imagePath);
             if (img == null)

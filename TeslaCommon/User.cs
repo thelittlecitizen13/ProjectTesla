@@ -5,12 +5,12 @@ namespace TeslaCommon
     public class User : IMember
     {
         public string Name { get; set; }
-        public MemberData Data { get; set; }
+        public IMemberData Data { get; set; }
         public TcpClient client { get; set; }
         public NetworkStream nwStream { get; set; }
-        public User(MemberData memberData, TcpClient tcpClient)
+        public User(UserData memberData, TcpClient tcpClient)
         {
-            Name = memberData.MemberName;
+            Name = memberData.Name;
             Data = memberData;
             client = tcpClient;
             nwStream = client.GetStream();

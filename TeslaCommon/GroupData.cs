@@ -8,12 +8,12 @@ namespace TeslaCommon
     {
         public string UID { get; set; }
         public string Name { get; set; }
-        public List<MemberData> Users { get; set; }
-        public GroupData(string groupName, MemberData groupCreator)
+        public List<UserData> Users { get; set; }
+        public GroupData(string groupName, UserData groupCreator)
         {
             UID = Guid.NewGuid().ToString();
             Name = groupName;
-            Users = new List<MemberData>() { groupCreator };
+            Users = new List<UserData>() { groupCreator };
         }
     }
 }

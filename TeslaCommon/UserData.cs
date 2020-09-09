@@ -5,11 +5,11 @@ using System.Text;
 namespace TeslaCommon
 {
     [Serializable]
-    public class MemberData : IMemberData
+    public class UserData : IMemberData
     {
         public string UID { get; set; }
         public string Name { get; set; }
-        public MemberData(string memberName)
+        public UserData(string memberName)
         {
             Name = memberName;
             UID = Guid.NewGuid().ToString();

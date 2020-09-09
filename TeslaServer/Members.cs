@@ -22,7 +22,7 @@ namespace TeslaServer
         }
         public User RemoveUser(string memberName)
         {
-            string teslaUserUID = TeslaUsers.Where(user => user.Value.Data.MemberName == memberName).FirstOrDefault().Key ?? "";
+            string teslaUserUID = TeslaUsers.Where(user => user.Value.Data.Name == memberName).FirstOrDefault().Key ?? "";
             if (!string.IsNullOrWhiteSpace(teslaUserUID))
             {
                 User deletedMember;
@@ -50,7 +50,7 @@ namespace TeslaServer
         }
         public Group RemoveGroup(string memberName)
         {
-            string teslaUserUID = TeslaGroups.Where(user => user.Value.Data.MemberName == memberName).FirstOrDefault().Key ?? "";
+            string teslaUserUID = TeslaGroups.Where(user => user.Value.Data.Name == memberName).FirstOrDefault().Key ?? "";
             if (!string.IsNullOrWhiteSpace(teslaUserUID))
             {
                 Group deletedMember;

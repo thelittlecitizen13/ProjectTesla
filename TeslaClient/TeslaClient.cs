@@ -18,7 +18,7 @@ namespace TeslaClient
         private MessageReceiver _messageReceiver;
         private OutputManager _outputManager;
         private InputManager _inputManager;
-        private MemberData _clientData;
+        private UserData _clientData;
         private ContactsManager _contactsManager;
         private bool _chatRoomExitToken;
 
@@ -33,12 +33,12 @@ namespace TeslaClient
             _contactsManager = new ContactsManager();
             _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager, _contactsManager);
             _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
-            _clientData = new MemberData(Name);
+            _clientData = new UserData(Name);
             _chatRoomExitToken = false;
             
         }
 
-        private void WriteAMessage(MemberData currentChatMember)
+        private void WriteAMessage(UserData currentChatMember)
         {
             _outputManager.DisplayText("Enter your message");
             string msg = _inputManager.GetUserInput();
@@ -87,7 +87,7 @@ namespace TeslaClient
                         string choice = _inputManager.ValidateContactChoose(_contactsManager);
                         if (choice.ToLower() == EXIT_COMMAND)
                             break;
-                        MemberData chatMember = _contactsManager.GetContactByName(choice);
+                        UserData chatMember = _contactsManager.GetContactByName(choice);
                         
                         
                         while (!_chatRoomExitToken)

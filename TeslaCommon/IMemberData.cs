@@ -4,9 +4,9 @@ using System.Text;
 
 namespace TeslaCommon
 {
-    interface IMemberData
+    public interface IMemberData
     {
         string UID { get; set; }
-        string MemberName { get; set; }
+        string Name { get; set; }
     }
 }

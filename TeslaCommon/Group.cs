@@ -8,23 +8,25 @@ namespace TeslaCommon
     public class Group : IMember
     {
         public string Name { get; set; }
-        public MemberData Data { get; set; }
-        public List<MemberData> GroupUsers { get; set; }
-        public List<MemberData> GroupManagers { get; set; }
-        public Group(MemberData memberData)
+        public IMemberData Data { get; set; }
+        public List<UserData> GroupUsers { get; set; }
+        public List<UserData> GroupManagers { get; set; }
+        
+
+        public Group(UserData memberData)
         {
             Data = memberData;
-            Name = memberData.MemberName;
-            GroupUsers = new List<MemberData>();
-            GroupManagers = new List<MemberData>();
+            Name = memberData.Name;
+            GroupUsers = new List<UserData>();
+            GroupManagers = new List<UserData>();
         }
-        public string AddMember(MemberData member)
+        public string AddMember(UserData member)
         {
             //ToDo : check if the member already in the group
             GroupUsers.Add(member);
-            return $"{member.MemberName} added successfully to {Name} group";
+            return $"{member.Name} added successfully to {Name} group";
         }
-        public string RemoveMember(MemberData memberToRemove, MemberData executer)
+        public string RemoveMember(UserData memberToRemove, UserData executer)
         {
             bool isExecuterManager = GroupManagers.Any(member => member.UID == executer.UID);
             if (isExecuterManager)
@@ -33,9 +35,9 @@ namespace TeslaCommon
                 if (toRemove != null)
                 {
                     GroupUsers.Remove(toRemove);
-                    return $"{toRemove.MemberName} removed from group {Name}";
+                    return $"{toRemove.Name} removed from group {Name}";
                 }
-                return $"User {toRemove.MemberName} is not in group {Name}";
+                return $"User {toRemove.Name} is not in group {Name}";
             }
             return $"You are not a manager of {Name} group";
         }

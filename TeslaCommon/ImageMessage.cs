@@ -6,11 +6,11 @@ namespace TeslaCommon
     [Serializable]
     public class ImageMessage : IMessage
     {
-        public MemberData Source { get; set; }
-        public MemberData Destination { get; set; }
+        public IMemberData Source { get; set; }
+        public IMemberData Destination { get; set; }
         public DateTime MessageTime { get; set; }
         public Bitmap Image { get; set; }
-        public ImageMessage(Bitmap img, MemberData src, MemberData dst)
+        public ImageMessage(Bitmap img, UserData src, UserData dst)
         {
             Source = src;
             Destination = dst;

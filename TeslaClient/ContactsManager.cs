@@ -24,7 +24,7 @@ namespace TeslaClient
         {
             ContactsMenu.CreateMenu(ContactsDB);
         }
-        public MemberData GetContactByName(string name)
+        public UserData GetContactByName(string name)
         {
             if (ContactsDB.ContactList.ContainsKey(name))
                 return ContactsDB.ContactList[name];

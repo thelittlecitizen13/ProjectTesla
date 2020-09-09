@@ -7,22 +7,22 @@ namespace TeslaCommon
     [Serializable]
     public class Contacts
     {
-        public Dictionary<string, MemberData> ContactList { get; set; }
+        public Dictionary<string, UserData> ContactList { get; set; }
         public Contacts()
         {
-            ContactList = new Dictionary<string, MemberData>();
-            ContactList.TryAdd("Everyone", new MemberData("Everyone"));
+            ContactList = new Dictionary<string, UserData>();
+            ContactList.TryAdd("Everyone", new UserData("Everyone"));
         }
-        public bool AddContact(MemberData memberData)
+        public bool AddContact(UserData memberData)
         {
-            return ContactList.TryAdd(memberData.MemberName, memberData);
+            return ContactList.TryAdd(memberData.Name, memberData);
         }
-        public void RemoveContact(MemberData memberData)
+        public void RemoveContact(UserData memberData)
         {
-            if (ContactList.ContainsKey(memberData.MemberName))
+            if (ContactList.ContainsKey(memberData.Name))
             {
-                MemberData removedMemberData;
-                ContactList.Remove(memberData.MemberName, out removedMemberData);
+                UserData removedMemberData;
+                ContactList.Remove(memberData.Name, out removedMemberData);
             }
         }
     }

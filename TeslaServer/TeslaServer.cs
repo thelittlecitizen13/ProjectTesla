@@ -33,22 +33,22 @@ namespace TeslaServer
         {
             NetworkStream nwStream = client.GetStream();
             TextMessage dataReceived = (TextMessage)_binaryFormatter.Deserialize(nwStream);
-            User newUser = new User(dataReceived.Source, client);
-            string clientName = dataReceived.Source.MemberName;
-            if (_membersDB.AddUser(newUser) && _contactsDB.AddContact(newUser.Data))
+            User newUser = new User((UserData)dataReceived.Source, client);
+            string clientName = dataReceived.Source.Name;
+            if (_membersDB.AddUser(newUser) && _contactsDB.AddContact((UserData)newUser.Data))
             {
                 connectionEstablishedPrint(client, clientName);
-                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new MemberData("Server"), new MemberData("all"));
+                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new UserData("Server"), new UserData("all"));
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
-                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new MemberData("Server"), _contactsDB.ContactList["Everyone"]);
+                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new UserData("Server"), _contactsDB.ContactList["Everyone"]);
                 deliverMessageToDestination(newContactsDBMessage);
-                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new MemberData("Server"), new MemberData("all")));
+                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new UserData("Server"), new UserData("all")));
                 
                 return true;
             }
             else
             {
-                TextMessage nameTakenMessage = new TextMessage($"{clientName} name is already taken", new MemberData("all"), new MemberData("all"));
+                TextMessage nameTakenMessage = new TextMessage($"{clientName} name is already taken", new UserData("all"), new UserData("all"));
                 _binaryFormatter.Serialize(nwStream, nameTakenMessage);
                 return false;
             }
@@ -97,11 +97,11 @@ namespace TeslaServer
         private void removeUserFromMembersDB(TcpClient client)
         {
             User removedUser = _membersDB.RemoveUser(client);
-            _contactsDB.RemoveContact(removedUser.Data);
+            _contactsDB.RemoveContact((UserData)removedUser.Data);
             if (removedUser != null)
             {
-                SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new MemberData("Server"), new MemberData("all")));
-                SendToAllClients(new ContactsMessage(_contactsDB, new MemberData("Server"), new MemberData("all"))); // ToDo: move to a function with indicative name
+                SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new UserData("Server"), new UserData("all")));
+                SendToAllClients(new ContactsMessage(_contactsDB, new UserData("Server"), new UserData("all"))); // ToDo: move to a function with indicative name
             }
         }
         private void connectionEstablishedPrint(TcpClient client, string Name)
@@ -151,7 +151,7 @@ namespace TeslaServer
         private void deliverMessageToDestination(IMessage message)
         {
             // ToDo: Refactor - do logics in Members class
-            if (message.Destination.MemberName == "Everyone")
+            if (message.Destination.Name == "Everyone")
             {
                 SendToAllClients(message);
                 return;
