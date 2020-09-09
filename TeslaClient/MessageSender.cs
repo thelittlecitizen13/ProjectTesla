@@ -16,14 +16,16 @@ namespace TeslaClient
         private IFormatter _binaryFormatter;
         private OutputManager _outputManager;
         private InputManager _inputManager;
+        private CommandManager _commandManager;
         private string _name;
-        public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager, string name)
+        public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager, string name, CommandManager commandManager)
         {
             _nwStream = networkStream;
             _binaryFormatter = new BinaryFormatter();
             _outputManager = outputManager;
             _inputManager = inputManager;
             _name = name;
+            _commandManager = commandManager;
         }
         public void SendNewMessage(string msg, IMemberData destinationMember, IMemberData sourceMember, UserData messageAuthor)
         {
@@ -51,6 +53,10 @@ namespace TeslaClient
                 SendNewTextMessage(msg, (UserData)sourceMember, (UserData)destinationMember);
             }
 
+        }
+        public void SendNewMessage(IMessage message)
+        {
+            _binaryFormatter.Serialize(_nwStream, message);
         }
         public void SendNewTextMessage(string text, UserData src, UserData dst)
         {
@@ -105,6 +111,12 @@ namespace TeslaClient
         {
             System.IO.Directory.CreateDirectory(@"C:\images");
         }
-        
+        private void HandleUserCommands(string msg)
+        {
+            string[] userArgs = msg.Split(" ");
+            IMessage messageFromCommand = _commandManager.GenerateMessageFromCommand(userArgs);
+            SendNewMessage(messageFromCommand);
+
+        }
     }
 }
