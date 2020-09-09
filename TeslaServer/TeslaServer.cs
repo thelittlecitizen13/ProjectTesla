@@ -9,6 +9,7 @@ using System.Threading;
 using System.Drawing;
 using System.Drawing.Imaging;
 using TeslaCommon;
+using System.Linq;
 
 namespace TeslaServer
 {
@@ -226,11 +227,26 @@ namespace TeslaServer
         private void updateGroup(GroupUpdateMessage message)
         {
             GroupData changedGroup = message.GroupChanged;
+            GroupData oldGroup = (GroupData)_contactsDB.GetContactByName(changedGroup.Name);
             if(_contactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
             {
                 _membersDB.UpdateGroup(changedGroup);
                 sendCustomMessage((UserData)message.Source, "Group updated successfully.");
+                List<UserData> removedUsers = oldGroup.Users.Where(user => !changedGroup.ContainsUser(user)).ToList();
+                //message.GroupChanged = oldGroup;
                 updateUsersAboutGroupChange(message);
+                if (removedUsers != null)
+                {
+                    UserData dummyCreator = new UserData("server");
+                    GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, dummyCreator);
+                    removedUserDatasGroup.RemoveUser(dummyCreator);
+                    GroupUpdateMessage messageOfRemoval = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete, dummyCreator, dummyCreator);
+                    foreach (var removedUser in removedUsers)
+                    {
+                        User user = _membersDB.GetUser(removedUser.UID);
+                        sendMessageToUser(user.nwStream, messageOfRemoval);
+                    }
+                }
                 return;
             }
             sendNotAuthorizedMessage((UserData)message.Source);

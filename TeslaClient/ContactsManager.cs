@@ -47,7 +47,7 @@ namespace TeslaClient
                     ContactsDB.RemoveGroup(groupChanged);
                     break;
                 case ChangeType.Delete:
-                    ContactsDB.GroupsList.Remove(groupChanged.Name);
+                    ContactsDB.RemoveGroup(groupChanged);
                     break;
                 default:
                     break;

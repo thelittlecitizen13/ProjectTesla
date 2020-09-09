@@ -55,6 +55,16 @@ namespace TeslaCommon
         {
             GroupManagers.Add(managerToAdd);
         }
+        public bool ContainsUser(UserData user)
+        {
+            foreach(var userInGroup in Users)
+            {
+                if (userInGroup.Equals(user))
+                    return true;
+
+            }
+            return false;
+        }
 
     }
 }

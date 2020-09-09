@@ -63,7 +63,7 @@ namespace TeslaClient
             _outputManager.DisplayText(textToShow);
         }
         private void processGroupUpdateMessage(GroupUpdateMessage msg)
-        {
+        {            
             _contactsManager.UpdateGroup(msg);
             _contactsManager.UpdateContactsDB();
         }
