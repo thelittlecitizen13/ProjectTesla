@@ -177,12 +177,10 @@ namespace TeslaServer
         private void sendTextMessage(IMessage message)
         {
             string destinationUID = message.Destination.UID;
-            IMember destination;
-            destination = _membersDB.GetUser(destinationUID);
+            User destination = _membersDB.GetUser(destinationUID);
             if (destination != null)
             {
-                User destinationUser = (User)destination;
-                sendMessageToUser(destinationUser.nwStream, message);
+                sendMessageToUser(destination.nwStream, message);
                 return;
             }
 
@@ -196,11 +194,11 @@ namespace TeslaServer
                 return;
             }
             string destinationUID = message.Destination.UID;
-            IMember destination = _membersDB.GetGroup(destinationUID);
+            Group destination = _membersDB.GetGroup(destinationUID);
             if (destination != null)
             {
-                Group destinationGroup = (Group)destination;
-                foreach (var userData in destinationGroup.GroupUsers)
+                //Group destinationGroup = (Group)destination;
+                foreach (var userData in destination.GroupUsers)
                 {
                     User userInGroup = _membersDB.GetUser(userData.UID);
                     sendMessageToUser(userInGroup.nwStream, message);
