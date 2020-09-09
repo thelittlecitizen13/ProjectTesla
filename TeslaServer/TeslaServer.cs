@@ -161,6 +161,7 @@ namespace TeslaServer
         }
         private void processGroupUpdateMessage(GroupUpdateMessage message)
         {
+
             switch (message.typeOfChange)
             {
                 case ChangeType.Create:

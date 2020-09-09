@@ -59,12 +59,16 @@ namespace TeslaClient
         private IMessage createNewGroupCommand(string groupName)
         {
             GroupData newGroup = new GroupData(groupName, _teslaClient.ClientData);
-            return new GroupUpdateMessage(newGroup, ChangeType.Create, _teslaClient.ClientData, new UserData("Server"));
+            if (newGroup != null)
+                return new GroupUpdateMessage(newGroup, ChangeType.Create, _teslaClient.ClientData, new UserData("Server"));
+            return null;
         }
         private IMessage removeGroupCommand(string groupName)
         {
             GroupData groupToRemove = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
-            return new GroupUpdateMessage(groupToRemove, ChangeType.Delete, _teslaClient.ClientData, new UserData("Server"));
+            if (groupToRemove != null)
+                return new GroupUpdateMessage(groupToRemove, ChangeType.Delete, _teslaClient.ClientData, new UserData("Server"));
+            return null;
         }
         private IMessage leaveGroupCommand(string groupName)
         {
@@ -87,28 +91,32 @@ namespace TeslaClient
             if (indexOfAction == -1)
                 return null;
             GroupData groupData = (GroupData)_teslaClient.ContactsMan.GetContactByName(args[indexOfAction + 1]); // group name
-            int indexOfUpdateType = indexOfAction + 2;
-            int indexOfUsers = indexOfAction + 3;
-            List<UserData> usersListed = new List<UserData>();
-            for (int i = indexOfUsers; i < args.Length; i++)
+            if (groupData != null)
             {
-                UserData user = (UserData)_teslaClient.ContactsMan.GetContactByName(args[i]);
-                if (user != null)
-                    usersListed.Add(user);
+                int indexOfUpdateType = indexOfAction + 2;
+                int indexOfUsers = indexOfAction + 3;
+                List<UserData> usersListed = new List<UserData>();
+                for (int i = indexOfUsers; i < args.Length; i++)
+                {
+                    UserData user = (UserData)_teslaClient.ContactsMan.GetContactByName(args[i]);
+                    if (user != null)
+                        usersListed.Add(user);
+                }
+                switch (args[indexOfUpdateType].ToLower())
+                {
+                    case "-addusers":
+                        return addUsersToGroupCommand(groupData, usersListed);
+                    case "-removeusers":
+                        return removeUsersFromGroupCommand(groupData, usersListed);
+                    case "-addmanagers":
+                        return addManagersToGroupCommand(groupData, usersListed);
+                    case "-removemanagers":
+                        return removeManagersFromGroupCommand(groupData, usersListed);
+                    default:
+                        return null;
+                }
             }
-            switch (args[indexOfUpdateType].ToLower())
-            {
-                case "-addusers":
-                    return addUsersToGroupCommand(groupData, usersListed);
-                case "-removeusers":
-                    return removeUsersFromGroupCommand(groupData, usersListed);
-                case "-addmanagers":
-                    return addManagersToGroupCommand(groupData, usersListed);
-                case "-removemanagers":
-                    return removeManagersFromGroupCommand(groupData, usersListed);
-                default:
-                    return null;
-            }
+            return null;
         }
         private IMessage addUsersToGroupCommand(GroupData groupData, List<UserData> users)
         {
