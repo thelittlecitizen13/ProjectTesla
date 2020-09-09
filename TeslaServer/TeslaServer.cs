@@ -144,18 +144,38 @@ namespace TeslaServer
         }
         private void processMessage(IMessage message)
         {
+            if (message.GetType() == typeof(GroupUpdateMessage))
+            {
+
+            }
             if (message.GetType() != typeof(CommandMessage))
                 deliverMessageToDestination(message);
             // ToDo: Handle command messages
+            
         }
         private void deliverMessageToDestination(IMessage message)
         {
             // ToDo: Refactor - do logics in Members class
-            if (message.Destination.Name == "Everyone")
+
+            if (message.GetType() == typeof(GroupMessage))
             {
-                SendToAllClients(message);
-                return;
+                sendGroupMessage(message);
             }
+            if (message.GetType() == typeof(TextMessage))
+            {
+                sendTextMessage(message);
+            }
+
+        }
+        private void sendMessageToUser(NetworkStream nwStream, object obj)
+        {
+            Console.WriteLine($"Sending a message with type of {obj.GetType()}");
+            _binaryFormatter = new BinaryFormatter();
+            _binaryFormatter.Serialize(nwStream, obj);
+
+        }
+        private void sendTextMessage(IMessage message)
+        {
             string destinationUID = message.Destination.UID;
             IMember destination;
             destination = _membersDB.GetUser(destinationUID);
@@ -165,7 +185,18 @@ namespace TeslaServer
                 sendMessageToUser(destinationUser.nwStream, message);
                 return;
             }
-            destination = _membersDB.GetGroup(destinationUID);
+
+            Console.WriteLine("No such user"); //Debugging
+        }
+        private void sendGroupMessage(IMessage message)
+        {
+            if (message.Destination.Name == "Everyone")
+            {
+                SendToAllClients(message);
+                return;
+            }
+            string destinationUID = message.Destination.UID;
+            IMember destination = _membersDB.GetGroup(destinationUID);
             if (destination != null)
             {
                 Group destinationGroup = (Group)destination;
@@ -176,13 +207,7 @@ namespace TeslaServer
                 }
                 return;
             }
-            Console.WriteLine("No such member"); //Debugging
-        }
-        private void sendMessageToUser(NetworkStream nwStream, object obj)
-        {
-            Console.WriteLine($"Sending a message with type of {obj.GetType()}");
-            _binaryFormatter = new BinaryFormatter();
-            _binaryFormatter.Serialize(nwStream, obj);
+            Console.WriteLine("No such Group"); //Debugging
 
         }
 
