@@ -8,5 +8,6 @@ namespace TeslaCommon
     {
         string UID { get; set; }
         string Name { get; set; }
+        bool Equals(IMemberData member);
     }
 }

@@ -14,6 +14,7 @@ namespace TeslaClient
         private IFormatter _binaryFormatter;
         private OutputManager _outputManager;
         private ContactsManager _contactsManager;
+        public IMemberData currentChatMember;
 
         public MessageReceiver(NetworkStream networkStream, OutputManager outputManager, ContactsManager contactsManager)
         {

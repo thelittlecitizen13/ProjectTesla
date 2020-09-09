@@ -66,5 +66,9 @@ namespace TeslaCommon
             return false;
         }
 
+        public bool Equals(IMemberData member)
+        {
+            return Name == member.Name && UID == member.UID;
+        }
     }
 }
