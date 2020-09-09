@@ -5,7 +5,7 @@ using System.Text;
 namespace TeslaCommon
 {
     [Serializable]
-    public class MemberData
+    public class MemberData : IMemberData
     {
         public string UID { get; set; }
         public string MemberName { get; set; }
