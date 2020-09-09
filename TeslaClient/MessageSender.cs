@@ -111,7 +111,7 @@ namespace TeslaClient
         {
             System.IO.Directory.CreateDirectory(@"C:\images");
         }
-        private void HandleUserCommands(string msg)
+        public void HandleUserCommands(string msg)
         {
             string[] userArgs = msg.Split(" ");
             IMessage messageFromCommand = _commandManager.GenerateMessageFromCommand(userArgs);

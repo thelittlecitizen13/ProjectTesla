@@ -21,6 +21,7 @@ namespace TeslaClient
         public ContactsManager ContactsMan;
         public string Name;
         public UserData ClientData;
+        private CommandManager _commandManager;
 
         public TeslaClient(string address, int port, int clientNumber)
         {
@@ -31,8 +32,9 @@ namespace TeslaClient
             _outputManager = new OutputManager(Name);
             _inputManager = new InputManager(_outputManager);
             ContactsMan = new ContactsManager();
+            _commandManager = new CommandManager(this);
             _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager, ContactsMan);
-            _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name);
+            _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name, _commandManager);
             ClientData = new UserData(Name);
             _chatRoomExitToken = false;
             
@@ -48,11 +50,17 @@ namespace TeslaClient
                 _chatRoomExitToken = true;
                 return;
             }
+            if (msg.StartsWith("/"))
+            {
+                _messageSender.HandleUserCommands(msg);
+                return;
+            }
             if (currentChatMember.GetType() == typeof(GroupData))
                 _messageSender.SendNewMessage(msg, currentChatMember, currentChatMember, ClientData);
             else
                 _messageSender.SendNewMessage(msg, currentChatMember, ClientData, ClientData);
         }
+        
         private void ReceiveMessages()
         {
             _messageReceiver.Run();
