@@ -170,7 +170,8 @@ namespace TeslaServer
                 case ChangeType.Update:
                     updateGroup(message);
                     break;
-                case ChangeType.Leave:
+                case
+                ChangeType.Leave:
                     leaveGroup(message);
                     break;
                 case ChangeType.Delete:

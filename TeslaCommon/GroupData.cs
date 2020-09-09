@@ -17,9 +17,23 @@ namespace TeslaCommon
             Users = new List<UserData>() { groupCreator };
             GroupManagers = new List<UserData>() { groupCreator };
         }
+        public GroupData(GroupData groupData)
+        {
+            UID = groupData.UID;
+            Name = groupData.Name;
+            Users = new List<UserData>(groupData.Users);
+            GroupManagers = new List<UserData>(groupData.GroupManagers);
+        }
         public void RemoveUser(UserData userToRemove)
         {
-            Users.Remove(userToRemove);
+            foreach(var user in Users)
+            {
+                if (user.Equals(userToRemove))
+                {
+                    Users.Remove(user);
+                    return;
+                }
+            }
         }
         public void AddUser(UserData userToAdd)
         {
@@ -28,6 +42,14 @@ namespace TeslaCommon
         public void RemoveManager(UserData managerToRemove)
         {
             GroupManagers.Remove(managerToRemove);
+            foreach (var manager in GroupManagers)
+            {
+                if (manager.Equals(managerToRemove))
+                {
+                    GroupManagers.Remove(manager);
+                    return;
+                }
+            }
         }
         public void AddManager(UserData managerToAdd)
         {

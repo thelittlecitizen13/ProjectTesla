@@ -99,22 +99,31 @@ namespace TeslaCommon
         }
         public void RemoveUserFromGroup(GroupData groupData, UserData commiter)
         {
+            UserData userToRemove = null; 
             foreach (var user in groupData.Users)
             {
                 if (commiter.Equals(user))
                 {
-                    groupData.Users.Remove(user);
+                    userToRemove = user;
+                    
                     Console.WriteLine("User left a group"); //debug
                 }
+
             }
+            if (userToRemove != null)
+                groupData.Users.Remove(userToRemove);
+            userToRemove = null;
             foreach (var manager in groupData.GroupManagers)
             {
                 if (commiter.Equals(manager))
                 {
-                    groupData.GroupManagers.Remove(manager);
+                    userToRemove = manager;
+                    
                     Console.WriteLine("Manager left a group"); //debug
                 }
             }
+            if (userToRemove != null)
+                groupData.GroupManagers.Remove(userToRemove);
             GroupsList[groupData.Name] = groupData;
 
         }

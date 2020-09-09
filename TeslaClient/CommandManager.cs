@@ -75,12 +75,22 @@ namespace TeslaClient
             GroupData groupToLeave = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
             if (groupToLeave != null)
             {
-                groupToLeave.RemoveUser(_teslaClient.ClientData);
-                groupToLeave = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
-                _teslaClient.ContactsMan.ContactsDB.RemoveGroup(groupToLeave);
-                
-                Console.WriteLine("Leaving group..."); //debug
-                return new GroupUpdateMessage(groupToLeave, ChangeType.Leave, _teslaClient.ClientData, new UserData("Server"));
+                try
+                {
+                    //groupToLeave.RemoveUser(_teslaClient.ClientData);
+                    //groupToLeave.RemoveManager(_teslaClient.ClientData);
+
+                    // groupToLeave = (GroupData)_teslaClient.ContactsMan.GetContactByName(groupName);
+
+                    _teslaClient.ContactsMan.ContactsDB.RemoveGroup(groupToLeave);
+                    _teslaClient.ContactsMan.UpdateContactsDB();
+                    Console.WriteLine("Leaving group..."); //debug
+                    return new GroupUpdateMessage(groupToLeave, ChangeType.Leave, _teslaClient.ClientData, new UserData("Server"));
+                }
+                catch
+                {
+                    return null;
+                }
             }
             return null;
         }

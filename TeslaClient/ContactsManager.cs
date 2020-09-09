@@ -43,6 +43,9 @@ namespace TeslaClient
                 case ChangeType.Update:
                     ContactsDB.GroupsList[groupChanged.Name] = groupChanged;
                     break;
+                case ChangeType.Leave:
+                    ContactsDB.RemoveGroup(groupChanged);
+                    break;
                 case ChangeType.Delete:
                     ContactsDB.GroupsList.Remove(groupChanged.Name);
                     break;
