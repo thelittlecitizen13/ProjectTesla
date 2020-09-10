@@ -196,8 +196,7 @@ namespace TeslaClient
             if (command.StartsWith("/"))
             {
                 _messageSender.HandleUserCommands(command, ClientData, ClientData);
-                _outputManager.DisplayText("Press any key to continue..", ConsoleColor.Gray);
-                _inputManager.ReadLine();
+                
             }
            
         }
