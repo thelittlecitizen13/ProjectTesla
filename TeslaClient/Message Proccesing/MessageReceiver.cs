@@ -100,8 +100,7 @@ namespace TeslaClient
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message); // Debug
-                return null;
+                throw e;
             }
 
         }

@@ -71,7 +71,6 @@ namespace TeslaClient
         }
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
-            //IMemberData EveryOneGroup = _contactsManager.GetContactByName("Everyone");
             _messageSender.SendNewMessage(Name, new UserData("Server") , MyData, MyData); 
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
@@ -164,7 +163,7 @@ namespace TeslaClient
             clientData.Outputter.ClearScreen();
             _chatRoomExitToken = false;
             clientData.Outputter.DisplayText($"Hey {Name}", ConsoleColor.Green);
-            Task.Delay(300).Wait();
+            Task.Delay(100).Wait();
             displayContactMenu();
             IMemberData chatMember = clientData.contactsManager.GetContactByName("Admin");
             _messageReceiver.SetCurrentMemberChat(chatMember);
