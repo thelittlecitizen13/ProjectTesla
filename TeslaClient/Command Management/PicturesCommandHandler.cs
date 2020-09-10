@@ -54,8 +54,10 @@ namespace TeslaClient
             }
             catch (FileNotFoundException)
             {
+                _teslaClient.clientData.Outputter.DisplayText("File not found. Please enter a valid file path.", ConsoleColor.Red);
                 return null;
             }
         }
+
     }
 }
