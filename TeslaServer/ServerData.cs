@@ -16,10 +16,8 @@ namespace TeslaServer
         public Members MembersDB;
         public Contacts ContactsDB;
         public UserData AdminData;
-        public ServerData(IPAddress iPAddress, TcpListener server, ISerializer serializer, Members membersDB, Contacts contactsDB, UserData adminData)
+        public ServerData(ISerializer serializer, Members membersDB, Contacts contactsDB, UserData adminData)
         {
-            LocalAddress = iPAddress;
-            Server = server;
             Serializer = serializer;
             MembersDB = membersDB;
             ContactsDB = contactsDB;

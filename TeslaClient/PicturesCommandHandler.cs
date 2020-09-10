@@ -42,7 +42,7 @@ namespace TeslaClient
                 g.CopyFromScreen(0, 0, 0, 0,
                 bitmap.Size, CopyPixelOperation.SourceCopy);
             }
-            string imageFolderPath = _teslaClient.GetOutputManager().CreateImageFolder();
+            string imageFolderPath = _teslaClient.clientData.Outputter.CreateImageFolder();
             bitmap.Save(imageFolderPath + "clientPrintScreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
             return bitmap;
         }

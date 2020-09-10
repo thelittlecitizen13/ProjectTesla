@@ -10,42 +10,40 @@ namespace TeslaClient
 {
     public class TeslaClient
     {
-        private const string EXIT_COMMAND = "/exit";
         private IPAddress _serverAddress;
-        private int _port;
         private TcpClient _client;
         private MessageSender _messageSender;
         private MessageReceiver _messageReceiver;
-        private OutputManager _outputManager;
-        private InputManager _inputManager;
         private bool _chatRoomExitToken;
-        public ContactsManager ContactsMan;
         public string Name;
-        public UserData ClientData;
-        private CommandManager _commandManager;
+        public UserData MyData;
+        public ClientData clientData;
         
 
         public TeslaClient(string address, int port, int clientNumber)
         {
             _serverAddress = IPAddress.Parse(address);
-            _port = port;
             Name = "client" + clientNumber;
-            _client = new TcpClient(_serverAddress.ToString(), _port);
-            _outputManager = new OutputManager(Name);
-            _inputManager = new InputManager(_outputManager);
-            ContactsMan = new ContactsManager();
-            _commandManager = new CommandManager(this);
-            _messageReceiver = new MessageReceiver(_client.GetStream(), _outputManager, ContactsMan);
-            _messageSender = new MessageSender(_client.GetStream(), _outputManager, _inputManager, Name, _commandManager);
-            ClientData = new UserData(Name);
+            _client = new TcpClient(_serverAddress.ToString(), port);
+            clientDataCreator(_client.GetStream());
+            _messageReceiver = new MessageReceiver(clientData);
+            _messageSender = new MessageSender(clientData, Name);
+            MyData = new UserData(Name);
             _chatRoomExitToken = false;
             
         }
-
+        private void clientDataCreator(NetworkStream nwStream)
+        {            
+            OutputManager Outputter = new OutputManager(Name);
+            InputManager Inputter = new InputManager(Outputter);
+            CommandManager commandManager = new CommandManager(this);
+            ContactsManager contactsManager = new ContactsManager();
+            clientData = new ClientData(nwStream, Outputter, Inputter, commandManager, contactsManager);
+        }
         private void WriteAMessage(IMemberData currentChatMember)
         {            
-            string msg = _inputManager.GetUserInput();
-            if (msg.ToLower() == EXIT_COMMAND)
+            string msg = clientData.Inputter.GetUserInput();
+            if (msg.ToLower() == "/exit")
             {
                 _chatRoomExitToken = true;
                 _messageReceiver.SetCurrentMemberChat(null);
@@ -53,18 +51,18 @@ namespace TeslaClient
             }
             if(msg.ToLower() == "/help")
             {
-                _outputManager.DisplayText(_commandManager.GetCommandHelp());
+                clientData.Outputter.DisplayText(clientData.commandManager.GetCommandHelp());
                 return;
             }
             if (msg.StartsWith("/"))
             {
-                _messageSender.HandleUserCommands(msg, ClientData, currentChatMember);
+                _messageSender.HandleUserCommands(msg, MyData, currentChatMember);
                 return;
             }
             if (currentChatMember.GetType() == typeof(GroupData))
-                _messageSender.SendNewMessage(msg, currentChatMember, currentChatMember, ClientData);
+                _messageSender.SendNewMessage(msg, currentChatMember, currentChatMember, MyData);
             else
-                _messageSender.SendNewMessage(msg, currentChatMember, ClientData, ClientData);
+                _messageSender.SendNewMessage(msg, currentChatMember, MyData, MyData);
         }
         
         private void ReceiveMessages()
@@ -74,20 +72,20 @@ namespace TeslaClient
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
             //IMemberData EveryOneGroup = _contactsManager.GetContactByName("Everyone");
-            _messageSender.SendNewMessage(Name, new UserData("Server") , ClientData, ClientData); 
+            _messageSender.SendNewMessage(Name, new UserData("Server") , MyData, MyData); 
             TextMessage serverAnswer = (TextMessage)_messageReceiver.ReceiveAMessage();
             Console.WriteLine(serverAnswer.Message);
-            ContactsMessage contactsMessage = (ContactsMessage)_messageReceiver.ReceiveAMessage(); 
-            ContactsMan.UpdateContactsDB(contactsMessage.ContactList);
+            ContactsMessage contactsMessage = (ContactsMessage)_messageReceiver.ReceiveAMessage();
+            clientData.contactsManager.UpdateContactsDB(contactsMessage.ContactList);
         }
         private void displayContactMenu()
         {
-            _outputManager.DisplayText(ContactsMan.ContactsMenu.Menu);
-            _outputManager.DisplayText(_commandManager.GetBasicCommandsHelp());
+            clientData.Outputter.DisplayText(clientData.contactsManager.ContactsMenu.Menu);
+            clientData.Outputter.DisplayText(clientData.commandManager.GetBasicCommandsHelp());
         }
         public void Run()
         {
-            ContactsMan.UpdateContactsDB();
+            clientData.contactsManager.UpdateContactsDB();
             NetworkStream nwStream = _client.GetStream();
             try
             {
@@ -103,7 +101,7 @@ namespace TeslaClient
                     }
                     catch (Exception e)
                     {
-                        _outputManager.DisplayText(e.Message);
+                        clientData.Outputter.DisplayText(e.Message);
                     }
                         
                 });
@@ -119,15 +117,15 @@ namespace TeslaClient
                     }
                     catch (Exception e)
                     {
-                        _outputManager.DisplayText(e.Message);
+                        clientData.Outputter.DisplayText(e.Message);
                     }
 
                 });
                 while (true)
                 {
                     resetChat();
-                    string choice = _inputManager.ValidateContactChoose(ContactsMan);
-                    if (choice.ToLower() == EXIT_COMMAND)
+                    string choice = clientData.Inputter.ValidateContactChoose(clientData.contactsManager);
+                    if (choice.ToLower() == "/exit")
                         break;
                     if (choice.StartsWith("/"))
                     {
@@ -150,11 +148,11 @@ namespace TeslaClient
         }
         private void startNewConversation(string memberName)
         {
-            IMemberData chatMember = ContactsMan.GetContactByName(memberName);
+            IMemberData chatMember = clientData.contactsManager.GetContactByName(memberName);
             _messageReceiver.SetCurrentMemberChat(chatMember);
-            _outputManager.ClearScreen();
-            _outputManager.DisplayText($"You are now in a chat with {chatMember.Name}!", ConsoleColor.Green);
-            _outputManager.DisplayText(_commandManager.GetChatCommands(), ConsoleColor.Cyan);
+            clientData.Outputter.ClearScreen();
+            clientData.Outputter.DisplayText($"You are now in a chat with {chatMember.Name}!", ConsoleColor.Green);
+            clientData.Outputter.DisplayText(clientData.commandManager.GetChatCommands(), ConsoleColor.Cyan);
             _messageReceiver.ShowUnSeenMessages();
             while (!_chatRoomExitToken)
             {
@@ -163,23 +161,20 @@ namespace TeslaClient
         }
         private void resetChat()
         {
-            _outputManager.ClearScreen();
+            clientData.Outputter.ClearScreen();
             _chatRoomExitToken = false;
-            _outputManager.DisplayText($"Hey {Name}", ConsoleColor.Green);
+            clientData.Outputter.DisplayText($"Hey {Name}", ConsoleColor.Green);
+            Task.Delay(300).Wait();
             displayContactMenu();
-            IMemberData chatMember = ContactsMan.GetContactByName("Admin");
+            IMemberData chatMember = clientData.contactsManager.GetContactByName("Admin");
             _messageReceiver.SetCurrentMemberChat(chatMember);
             _messageReceiver.ShowUnSeenMessages();
-        }
-        public OutputManager GetOutputManager()
-        {
-            return _outputManager;
         }
         private void processCommand(string command)
         {
             if (command.ToLower() == "/help")
             {
-                _outputManager.DisplayText(_commandManager.GetCommandHelp());
+                clientData.Outputter.DisplayText(clientData.commandManager.GetCommandHelp());
                 return;
             }
             if (command.ToLower() == "/refresh")
@@ -193,7 +188,9 @@ namespace TeslaClient
                 return;
             }
             if (command.StartsWith("/"))
-                _messageSender.HandleUserCommands(command, ClientData, ClientData);
+            {
+                _messageSender.HandleUserCommands(command, MyData, MyData);
+            }
 
         }
     }

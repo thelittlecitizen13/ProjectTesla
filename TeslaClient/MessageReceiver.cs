@@ -12,21 +12,17 @@ namespace TeslaClient
 {
     public class MessageReceiver
     {
-        private NetworkStream _nwStream;
         private ISerializer _serializer;
-        private OutputManager _outputManager;
-        private ContactsManager _contactsManager;
         private IMemberData _currentChatMember;
+        private ClientData _clientData;
         private object _currentMemberLocker = new object();
         public bool IsNotifyUnSeenMessages;
         public ChatHistories LocalChatHistories { get; set; }
-
-        public MessageReceiver(NetworkStream networkStream, OutputManager outputManager, ContactsManager contactsManager)
+        
+        public MessageReceiver(ClientData clientData)
         {
-            _nwStream = networkStream;
+            _clientData = clientData;
             _serializer = new BinarySerializer();
-            _outputManager = outputManager;
-            _contactsManager = contactsManager;
             LocalChatHistories = new ChatHistories();
             IsNotifyUnSeenMessages = true;
         }
@@ -67,39 +63,39 @@ namespace TeslaClient
                 processContactsMessage((ContactsMessage)msg);
                 return;
             }
-            _outputManager.DisplayText("Fatal - Message display failed"); // for Debug
+            _clientData.Outputter.DisplayText("Fatal - Message display failed"); // for Debug
         }
         private void processTextMessage(TextMessage msg)
         {
             string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.Name}: {msg.Message}";
-            _outputManager.DisplayText(textToShow);
+            _clientData.Outputter.DisplayText(textToShow);
         }
         private void processGroupMessage(GroupMessage msg)
         {
             string textToShow = $"{msg.MessageTime.ToString()} - {msg.Author.Name}: {msg.Message}";
-            _outputManager.DisplayText(textToShow);
+            _clientData.Outputter.DisplayText(textToShow);
         }
         private void processGroupUpdateMessage(GroupUpdateMessage msg)
-        {            
-            _contactsManager.UpdateGroup(msg);
-            _contactsManager.UpdateContactsDB();
+        {
+            _clientData.contactsManager.UpdateGroup(msg);
+            _clientData.contactsManager.UpdateContactsDB();
         }
         private void processImageMessage(ImageMessage msg)
         {
             string textToShow = $"{msg.MessageTime.ToString()} - {msg.Source.Name}: Image Received";
-            _outputManager.DisplayText(textToShow);
-            string imgPath = _outputManager.SaveAnImage(msg.Image);
-            _outputManager.DisplayAnImage(imgPath);
+            _clientData.Outputter.DisplayText(textToShow);
+            string imgPath = _clientData.Outputter.SaveAnImage(msg.Image);
+            _clientData.Outputter.DisplayAnImage(imgPath);
         }
         private void processContactsMessage(ContactsMessage contactsMessage)
         {
-            _contactsManager.UpdateContactsDB(contactsMessage.ContactList);
+            _clientData.contactsManager.UpdateContactsDB(contactsMessage.ContactList);
         }
         public IMessage ReceiveAMessage()
         {
             try
             {
-                var dataReceived = _serializer.Deserialize(_nwStream);
+                var dataReceived = _serializer.Deserialize(_clientData.NwStream);
                 return (IMessage)dataReceived;
             }
             catch (Exception e)
@@ -153,12 +149,12 @@ namespace TeslaClient
             foreach (var unseenFromAMember in LocalChatHistories.HistoryStatus)
             {
                 string memberUID = unseenFromAMember.Key;
-                IMemberData member = _contactsManager.GetMemberByUID(memberUID);
+                IMemberData member = _clientData.contactsManager.GetMemberByUID(memberUID);
                 if (member != null && member.Name != "Server")
                     sb.AppendLine($"You have {unseenFromAMember.Value} messages from {member.Name}");
             }
             if (!string.IsNullOrWhiteSpace(sb.ToString()))
-                _outputManager.DisplayText(sb.ToString(),ConsoleColor.Gray);
+                _clientData.Outputter.DisplayText(sb.ToString(),ConsoleColor.Gray);
         }
     }
 
