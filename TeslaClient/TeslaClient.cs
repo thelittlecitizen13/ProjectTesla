@@ -23,6 +23,7 @@ namespace TeslaClient
         public string Name;
         public UserData ClientData;
         private CommandManager _commandManager;
+        
 
         public TeslaClient(string address, int port, int clientNumber)
         {
@@ -86,9 +87,7 @@ namespace TeslaClient
         private void displayContactMenu()
         {
             _outputManager.DisplayText(ContactsMan.ContactsMenu.Menu);
-            _outputManager.DisplayText("Type /help to see available commands (like group controlling)");
-            _outputManager.DisplayText("Type /refresh to refresh contacts");
-            _outputManager.DisplayText("Type /exit to exit");
+            _outputManager.DisplayText(_commandManager.GetBasicCommandsHelp());
         }
         public void Run()
         {
@@ -147,6 +146,14 @@ namespace TeslaClient
                         }
                         if (choice.ToLower() == "/refresh")
                         {
+                            continue;
+                        }
+                        if (choice.ToLower() == "/notifications")
+                        {
+                            if (_messageReceiver.IsNotifyUnSeenMessages)
+                                _messageReceiver.IsNotifyUnSeenMessages = false;
+                            else
+                                _messageReceiver.IsNotifyUnSeenMessages = true;
                             continue;
                         }
                         if (choice.StartsWith("/"))

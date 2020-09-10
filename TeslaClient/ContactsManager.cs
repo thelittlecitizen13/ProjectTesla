@@ -19,6 +19,7 @@ namespace TeslaClient
         public void UpdateContactsDB(Contacts contacts)
         {
             ContactsDB.UsersList = contacts.UsersList;
+            ContactsDB.GroupsList["Everyone"] = contacts.GroupsList["Everyone"];
             ContactsMenu.CreateMenu(ContactsDB);
         }
         public void UpdateContactsDB()

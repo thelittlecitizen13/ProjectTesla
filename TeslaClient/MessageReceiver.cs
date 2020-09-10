@@ -18,6 +18,7 @@ namespace TeslaClient
         private ContactsManager _contactsManager;
         private IMemberData _currentChatMember;
         private object _currentMemberLocker = new object();
+        public bool IsNotifyUnSeenMessages;
         public ChatHistories LocalChatHistories { get; set; }
 
         public MessageReceiver(NetworkStream networkStream, OutputManager outputManager, ContactsManager contactsManager)
@@ -27,6 +28,7 @@ namespace TeslaClient
             _outputManager = outputManager;
             _contactsManager = contactsManager;
             LocalChatHistories = new ChatHistories();
+            IsNotifyUnSeenMessages = true;
         }
 
         private void processMessage(IMessage msg)
@@ -145,16 +147,19 @@ namespace TeslaClient
         }
         public void NotifyForUnSeenMessages()
         {
+            if (!IsNotifyUnSeenMessages)
+                return;
             //Dictionary<string, int> UnseenMessagesDB = new Dictionary<string, int>()
             StringBuilder sb = new StringBuilder();
             foreach (var unseenFromAMember in LocalChatHistories.HistoryStatus)
             {
                 string memberUID = unseenFromAMember.Key;
                 IMemberData member = _contactsManager.GetMemberByUID(memberUID);
-                if (member.Name != "Server")
+                if (member != null && member.Name != "Server")
                     sb.AppendLine($"You have {unseenFromAMember.Value} messages from {member.Name}");
             }
-            _outputManager.DisplayText(sb.ToString());
+            if (!string.IsNullOrWhiteSpace(sb.ToString()))
+                _outputManager.DisplayText(sb.ToString());
         }
     }
 

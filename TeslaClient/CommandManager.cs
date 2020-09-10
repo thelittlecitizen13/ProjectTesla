@@ -167,7 +167,17 @@ namespace TeslaClient
         }
         public string GetCommandHelp()
         {
-            return GetGroupCommandHelp();
+            return GetBasicCommandsHelp() + GetGroupCommandHelp();
+        }
+        public string GetBasicCommandsHelp()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Type /help to see available commands (like group controlling)");
+            sb.AppendLine("Type /refresh to refresh contacts");
+            sb.AppendLine("Type /notifications to disable/enable unseen messages notifications");
+            sb.AppendLine("Type /exit to exit");
+            sb.AppendLine();
+            return sb.ToString();
         }
         public string GetGroupCommandHelp()
         {

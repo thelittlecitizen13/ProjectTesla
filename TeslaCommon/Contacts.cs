@@ -28,19 +28,19 @@ namespace TeslaCommon
             {
                 UsersList.Remove(memberData.Name, out removedMemberData);
             }
-            //try
-            //{
-            //    if (removedMemberData != null && GroupsList.Count != 0)
-            //        foreach (var group in GroupsList.Values)
-            //        {
-            //            RemoveUserFromGroup(group, removedMemberData);
-            //        }
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(e.Message);
-            //}
-            
+            try
+            {
+                if (removedMemberData != null && GroupsList.Count != 0)
+                    foreach (var group in GroupsList.Values)
+                    {
+                        RemoveUserFromGroup(group, removedMemberData);
+                    }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message) ;
+            }
+
         }
         public bool AddGroup(GroupData memberData)
         {

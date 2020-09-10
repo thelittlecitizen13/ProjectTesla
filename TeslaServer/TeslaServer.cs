@@ -43,10 +43,10 @@ namespace TeslaServer
                 connectionEstablishedPrint(client, clientName);
                 TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", _AdminData, (UserData)newUser.Data);
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
-                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, _AdminData, _AdminData); // refactor!!
+                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, _AdminData, _AdminData);
                 //deliverMessageToDestination(newContactsDBMessage);
                 SendToAllClients(newContactsDBMessage);
-                SendToAllClients(new TextMessage($"{clientName} joined the chat!", _AdminData, _AdminData)); //refactor!!
+                SendToAllClients(new TextMessage($"{clientName} joined the chat!", _AdminData, _AdminData));
                 
                 return true;
             }
