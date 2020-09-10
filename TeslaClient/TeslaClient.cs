@@ -58,7 +58,7 @@ namespace TeslaClient
             }
             if (msg.StartsWith("/"))
             {
-                _messageSender.HandleUserCommands(msg);
+                _messageSender.HandleUserCommands(msg, ClientData, currentChatMember);
                 return;
             }
             if (currentChatMember.GetType() == typeof(GroupData))
@@ -169,6 +169,10 @@ namespace TeslaClient
             _messageReceiver.SetCurrentMemberChat(chatMember);
             _messageReceiver.ShowUnSeenMessages();
         }
+        public OutputManager GetOutputManager()
+        {
+            return _outputManager;
+        }
         private void processCommand(string command)
         {
             if (command.ToLower() == "/help")
@@ -190,7 +194,7 @@ namespace TeslaClient
             }
             if (command.StartsWith("/"))
             {
-                _messageSender.HandleUserCommands(command);
+                _messageSender.HandleUserCommands(command, ClientData, ClientData);
                 _outputManager.DisplayText("Press any key to continue..", ConsoleColor.Gray);
                 _inputManager.ReadLine();
             }
