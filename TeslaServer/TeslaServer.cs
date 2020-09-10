@@ -20,6 +20,7 @@ namespace TeslaServer
         private IFormatter _binaryFormatter;
         private Members _membersDB;
         private Contacts _contactsDB;
+        private UserData _AdminData;
 
         public TeslaServer(int port)
         {
@@ -28,7 +29,8 @@ namespace TeslaServer
             _binaryFormatter = new BinaryFormatter();
             _membersDB = new Members();
             _contactsDB = new Contacts();
-        }
+            _AdminData = new UserData("Admin");
+    }
         
         private bool registerClient(TcpClient client)
         {
@@ -39,18 +41,18 @@ namespace TeslaServer
             if (_membersDB.AddUser(newUser) && _contactsDB.AddUser((UserData)newUser.Data))
             {
                 connectionEstablishedPrint(client, clientName);
-                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", new UserData("Server"), new UserData("all"));
+                TextMessage welcomeMessage = new TextMessage($"Welcome, {clientName}", _AdminData, (UserData)newUser.Data);
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
-                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, new UserData("Server"), new UserData("all")); // refactor!!
+                ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, _AdminData, _AdminData); // refactor!!
                 //deliverMessageToDestination(newContactsDBMessage);
                 SendToAllClients(newContactsDBMessage);
-                SendToAllClients(new TextMessage($"{clientName} joined the chat!", new UserData("Server"), new UserData("all"))); //refactor!!
+                SendToAllClients(new TextMessage($"{clientName} joined the chat!", _AdminData, _AdminData)); //refactor!!
                 
                 return true;
             }
             else
             {
-                TextMessage nameTakenMessage = new TextMessage($"{clientName} name is already taken", new UserData("all"), new UserData("all"));
+                TextMessage nameTakenMessage = new TextMessage($"{clientName} name is already taken", _AdminData, _AdminData);
                 _binaryFormatter.Serialize(nwStream, nameTakenMessage);
                 return false;
             }
@@ -59,6 +61,7 @@ namespace TeslaServer
         {
 
             _server.Start();
+            _contactsDB.AddUser(_AdminData);
             Console.WriteLine($"Listening at {_server.LocalEndpoint}. Waiting for connections.");
 
             try
@@ -102,8 +105,8 @@ namespace TeslaServer
             _contactsDB.RemoveUser((UserData)removedUser.Data);
             if (removedUser != null)
             {
-                SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", new UserData("Server"), new UserData("all")));
-                SendToAllClients(new ContactsMessage(_contactsDB, new UserData("Server"), new UserData("all"))); // ToDo: move to a function with indicative name
+                SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", _AdminData, _AdminData));
+                SendToAllClients(new ContactsMessage(_contactsDB, _AdminData, _AdminData)); // ToDo: move to a function with indicative name
             }
         }
         private void connectionEstablishedPrint(TcpClient client, string Name)
@@ -203,7 +206,7 @@ namespace TeslaServer
         private void sendCustomMessage(IMemberData destinationUser, string msg)
         {
             User userInGroup = _membersDB.GetUser(destinationUser.UID);
-            TextMessage badRequestMessage = new TextMessage(msg, new UserData("Server"), (UserData)destinationUser);
+            TextMessage badRequestMessage = new TextMessage(msg, _AdminData, (UserData)destinationUser);
             sendMessageToUser(userInGroup.nwStream, badRequestMessage);
         }
         private void createNewGroup(GroupUpdateMessage message)
@@ -237,10 +240,9 @@ namespace TeslaServer
                 updateUsersAboutGroupChange(message);
                 if (removedUsers != null)
                 {
-                    UserData dummyCreator = new UserData("server");
-                    GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, dummyCreator);
-                    removedUserDatasGroup.RemoveUser(dummyCreator);
-                    GroupUpdateMessage messageOfRemoval = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete, dummyCreator, dummyCreator);
+                    GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, _AdminData);
+                    removedUserDatasGroup.RemoveUser(_AdminData);
+                    GroupUpdateMessage messageOfRemoval = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete, _AdminData, _AdminData);
                     foreach (var removedUser in removedUsers)
                     {
                         User user = _membersDB.GetUser(removedUser.UID);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
@@ -22,15 +23,24 @@ namespace TeslaCommon
         }
         public void RemoveUser(UserData memberData)
         {
+            UserData removedMemberData = null;
             if (UsersList.ContainsKey(memberData.Name))
             {
-                UserData removedMemberData;
                 UsersList.Remove(memberData.Name, out removedMemberData);
             }
-            foreach(var group in GroupsList)
-            {
-
-            }
+            //try
+            //{
+            //    if (removedMemberData != null && GroupsList.Count != 0)
+            //        foreach (var group in GroupsList.Values)
+            //        {
+            //            RemoveUserFromGroup(group, removedMemberData);
+            //        }
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine(e.Message);
+            //}
+            
         }
         public bool AddGroup(GroupData memberData)
         {
@@ -127,5 +137,6 @@ namespace TeslaCommon
             GroupsList[groupData.Name] = groupData;
 
         }
+        
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using TeslaCommon;
 
 namespace TeslaClient
@@ -140,6 +142,19 @@ namespace TeslaClient
             {
                 _currentChatMember = currentMember;
             }
+        }
+        public void NotifyForUnSeenMessages()
+        {
+            //Dictionary<string, int> UnseenMessagesDB = new Dictionary<string, int>()
+            StringBuilder sb = new StringBuilder();
+            foreach (var unseenFromAMember in LocalChatHistories.HistoryStatus)
+            {
+                string memberUID = unseenFromAMember.Key;
+                IMemberData member = _contactsManager.GetMemberByUID(memberUID);
+                if (member.Name != "Server")
+                    sb.AppendLine($"You have {unseenFromAMember.Value} messages from {member.Name}");
+            }
+            _outputManager.DisplayText(sb.ToString());
         }
     }
 

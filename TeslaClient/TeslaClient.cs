@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TeslaCommon;
 
 namespace TeslaClient
@@ -112,11 +113,29 @@ namespace TeslaClient
                         }
                         
                     });
+                    ThreadPool.QueueUserWorkItem(obj =>
+                    {
+                        try
+                        {
+                            while (true)
+                            {
+                                _messageReceiver.NotifyForUnSeenMessages();
+                                Task.Delay(10000).Wait();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _outputManager.DisplayText(e.Message);
+                        }
+
+                    });
+
                     while (true)
                     {
                         _chatRoomExitToken = false;
                         displayContactMenu();
-                        IMemberData chatMember = ContactsMan.GetContactByName("Everyone");
+                        IMemberData chatMember = ContactsMan.GetContactByName("Admin");
+                        _messageReceiver.SetCurrentMemberChat(chatMember);
                         _messageReceiver.ShowUnSeenMessages();
                         string choice = _inputManager.ValidateContactChoose(ContactsMan);
                         if (choice.ToLower() == EXIT_COMMAND)
@@ -142,6 +161,7 @@ namespace TeslaClient
                         {
                             WriteAMessage(chatMember);
                         }
+                        
                         
 
                     }
