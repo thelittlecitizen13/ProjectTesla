@@ -78,55 +78,13 @@ namespace TeslaClient
             if (messageFromCommand != null)
                 SendNewMessage(messageFromCommand);
             else
+            {
                 _outputManager.DisplayText(_commandManager.GetCommandHelp());
+                _outputManager.DisplayText("Press any key to continue..", ConsoleColor.Gray);
+                _inputManager.ReadLine();
+            }
 
         }
-        //public void SendNewImageMessage()
-        //{
-
-        //}
-        //public void SendNewImageMessage(UserData src, UserData dst)
-        //{
-        //    IMessage message = new ImageMessage(takeScreenShot(), src, dst);
-        //    _binaryFormatter.Serialize(_nwStream, message);
-        //}
-        //public void SendNewImageMessage(string imagePath, UserData src, UserData dst)
-        //{
-        //    var img = loadImage(imagePath);
-        //    if (img == null)
-        //    {
-        //        SendNewTextMessage("Tried to send a message with no success", src, dst);
-        //        return;
-        //    }
-        //    IMessage message = new ImageMessage(img, src, dst);
-        //    _binaryFormatter.Serialize(_nwStream, message);
-        //}
-        //private Bitmap takeScreenShot()
-        //{
-        //    var bitmap = new Bitmap(1920, 1080);
-        //    using (var g = Graphics.FromImage(bitmap))
-        //    {
-        //        g.CopyFromScreen(0, 0, 0, 0,
-        //        bitmap.Size, CopyPixelOperation.SourceCopy);
-        //    }
-        //    CreateImageFolder();
-        //    bitmap.Save(@"C:\images\clientPrintScreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
-        //    return bitmap;
-        //}
-        //private Bitmap loadImage(string path)
-        //{
-        //    try
-        //    {
-        //        return new Bitmap(path);
-        //    }
-        //    catch (FileNotFoundException)
-        //    {
-        //        return null;
-        //    }
-        //}
-        //private void CreateImageFolder()
-        //{
-        //    System.IO.Directory.CreateDirectory(@"C:\images");
-        //}
+        
     }
 }

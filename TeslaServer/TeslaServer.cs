@@ -21,6 +21,10 @@ namespace TeslaServer
         private Members _membersDB;
         private Contacts _contactsDB;
         private UserData _AdminData;
+        private MessageReceiver _messageReceiver;
+        private MessageSender _messageSender;
+        public ServerData ServerDTO;
+        
 
         public TeslaServer(int port)
         {
@@ -30,6 +34,10 @@ namespace TeslaServer
             _membersDB = new Members();
             _contactsDB = new Contacts();
             _AdminData = new UserData("Admin");
+            ServerDTO = new ServerData(_localAddress, _server, _binaryFormatter, _membersDB, _contactsDB, _AdminData);
+            _messageSender = new MessageSender(_messageReceiver, ServerDTO);
+            _messageReceiver = new MessageReceiver(_messageSender, ServerDTO);
+            
     }
         
         private bool registerClient(TcpClient client)
@@ -45,8 +53,8 @@ namespace TeslaServer
                 _binaryFormatter.Serialize(nwStream, welcomeMessage);
                 ContactsMessage newContactsDBMessage = new ContactsMessage(_contactsDB, _AdminData, _AdminData);
                 //deliverMessageToDestination(newContactsDBMessage);
-                SendToAllClients(newContactsDBMessage);
-                SendToAllClients(new TextMessage($"{clientName} joined the chat!", _AdminData, _AdminData));
+                _messageSender.SendToAllClients(newContactsDBMessage);
+                _messageSender.SendToAllClients(new TextMessage($"{clientName} joined the chat!", _AdminData, _AdminData));
                 
                 return true;
             }
@@ -63,7 +71,6 @@ namespace TeslaServer
             _server.Start();
             _contactsDB.AddUser(_AdminData);
             Console.WriteLine($"Listening at {_server.LocalEndpoint}. Waiting for connections.");
-
             try
             {
                 // ToDo: Figure a way to accept client connections async at the best way.
@@ -76,7 +83,7 @@ namespace TeslaServer
                     {
                         if (registerClient(client))
                         {
-                            receiveMessage(client);
+                            _messageReceiver.ReceiveMessage(client);
                         }
                         else
                         {
@@ -95,36 +102,24 @@ namespace TeslaServer
                 Console.WriteLine("Terminating...");
                 _server.Stop();
             }
-
-        }
-
-
-        private void removeUserFromMembersDB(TcpClient client)
-        {
-            User removedUser = _membersDB.RemoveUser(client);
-            _contactsDB.RemoveUser((UserData)removedUser.Data);
-            if (removedUser != null)
-            {
-                SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", _AdminData, _AdminData));
-                SendToAllClients(new ContactsMessage(_contactsDB, _AdminData, _AdminData)); // ToDo: move to a function with indicative name
-            }
-        }
+        }      
         private void connectionEstablishedPrint(TcpClient client, string Name)
         {
             Console.WriteLine($"{Name} is connected. Remote connection: {0}:{1} ",
                         ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString(),
                         ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString());
         }
-        
-        private void SendToAllClients(object obj)
+    }
+    public class MessageReceiver
+    {
+        private MessageSender _messageSender;
+        private ServerData _serverDTO;
+        public MessageReceiver(MessageSender messageSender, ServerData serverData)
         {
-            foreach (var user in _membersDB.TeslaUsers.Values)
-            {
-                sendMessageToUser(user.nwStream, obj);
-            }
+            _messageSender = messageSender;
+            _serverDTO = serverData;
         }
-        
-        private void receiveMessage(TcpClient client) 
+        public void ReceiveMessage(TcpClient client)
         {
             //---get the incoming data through a network stream---
             NetworkStream nwStream = client.GetStream();
@@ -132,7 +127,7 @@ namespace TeslaServer
             {
                 try
                 {
-                    var dataReceived = _binaryFormatter.Deserialize(nwStream);
+                    var dataReceived = _serverDTO.BinarySerializer.Deserialize(nwStream);
                     processMessage((IMessage)dataReceived);
                 }
                 catch (Exception e)
@@ -141,7 +136,7 @@ namespace TeslaServer
                     break;
                 }
             }
-            while (true); 
+            while (true);
             // ToDo: find a way to change it - maybe to create searlization class
             //while (!dataReceived.ToLower().Contains("exit!"));
             removeUserFromMembersDB(client);
@@ -156,10 +151,10 @@ namespace TeslaServer
             }
             if (message.GetType() == typeof(CommandMessage))
             {
-                // ToDo: Handle command messages
+                // ToDo: Handle command messages when implemented
                 return;
             }
-            deliverMessageToDestination(message);
+            _messageSender.DeliverMessageToDestination(message);
 
 
         }
@@ -182,133 +177,138 @@ namespace TeslaServer
                     removeGroup(message);
                     break;
                 default:
-                    sendCustomMessage(message.Source, "Bad request");
+                    _messageSender.SendCustomMessage(message.Source, "Bad request");
                     break;
             }
             // ToDo: update groups
         }
-        private void updateUsersAboutGroupChange(GroupUpdateMessage message)
-        {
-            // updates group members about the change
-            List<UserData> groupUsers = message.GroupChanged.Users;
-            foreach (var groupMember in groupUsers)
-            {
-                User user = _membersDB.GetUser(groupMember.UID);
-                Console.WriteLine($"user {groupMember.Name} is in the group");
-                if (user != null)
-                {
-                    Console.WriteLine($"user {user.Name} updated about group change");
-                    _binaryFormatter = new BinaryFormatter();
-                    _binaryFormatter.Serialize(user.nwStream, message);
-                }
-            }
-        }
-        private void sendCustomMessage(IMemberData destinationUser, string msg)
-        {
-            User userInGroup = _membersDB.GetUser(destinationUser.UID);
-            TextMessage badRequestMessage = new TextMessage(msg, _AdminData, (UserData)destinationUser);
-            sendMessageToUser(userInGroup.nwStream, badRequestMessage);
-        }
+
         private void createNewGroup(GroupUpdateMessage message)
         {
             GroupData changedGroup = message.GroupChanged;
-            _contactsDB.AddGroup(changedGroup);
+            _serverDTO.ContactsDB.AddGroup(changedGroup);
             Group newGroup = new Group(changedGroup);
-            _membersDB.AddGroup(newGroup);
-            sendCustomMessage((UserData)message.Source, "Group created successfully.");
-            updateUsersAboutGroupChange(message);
+            _serverDTO.MembersDB.AddGroup(newGroup);
+            _messageSender.SendCustomMessage((UserData)message.Source, "Group created successfully.");
+            _messageSender.UpdateUsersAboutGroupChange(message);
         }
         private void leaveGroup(GroupUpdateMessage message)
         {
             GroupData changedGroup = message.GroupChanged;
-            _contactsDB.RemoveUserFromGroup(changedGroup, (UserData)message.Source);
-            sendCustomMessage((UserData)message.Source, "Left group successfully.");
+            _serverDTO.ContactsDB.RemoveUserFromGroup(changedGroup, (UserData)message.Source);
+            _messageSender.SendCustomMessage((UserData)message.Source, "Left group successfully.");
             message.typeOfChange = ChangeType.Update;
-            _membersDB.UpdateGroup(changedGroup);
-            updateUsersAboutGroupChange(message);
+            _serverDTO.MembersDB.UpdateGroup(changedGroup);
+            _messageSender.UpdateUsersAboutGroupChange(message);
         }
         private void updateGroup(GroupUpdateMessage message)
         {
             GroupData changedGroup = message.GroupChanged;
-            GroupData oldGroup = (GroupData)_contactsDB.GetContactByName(changedGroup.Name);
-            if(_contactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
+            GroupData oldGroup = (GroupData)(_serverDTO.ContactsDB.GetContactByName(changedGroup.Name));
+            if (_serverDTO.ContactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
             {
-                _membersDB.UpdateGroup(changedGroup);
-                sendCustomMessage((UserData)message.Source, "Group updated successfully.");
+                _serverDTO.MembersDB.UpdateGroup(changedGroup);
+                _messageSender.SendCustomMessage((UserData)message.Source, "Group updated successfully.");
                 List<UserData> removedUsers = oldGroup.Users.Where(user => !changedGroup.ContainsUser(user)).ToList();
                 //message.GroupChanged = oldGroup;
-                updateUsersAboutGroupChange(message);
+                _messageSender.UpdateUsersAboutGroupChange(message);
                 if (removedUsers != null)
                 {
-                    GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, _AdminData);
-                    removedUserDatasGroup.RemoveUser(_AdminData);
-                    GroupUpdateMessage messageOfRemoval = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete, _AdminData, _AdminData);
+                    GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, _serverDTO.AdminData);
+                    removedUserDatasGroup.RemoveUser(_serverDTO.AdminData);
+                    GroupUpdateMessage messageOfRemoval = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete, _serverDTO.AdminData, _serverDTO.AdminData);
                     foreach (var removedUser in removedUsers)
                     {
-                        User user = _membersDB.GetUser(removedUser.UID);
-                        sendMessageToUser(user.nwStream, messageOfRemoval);
+                        User user = _serverDTO.MembersDB.GetUser(removedUser.UID);
+                        _messageSender.SendMessageToUser(user.nwStream, messageOfRemoval);
                     }
                 }
                 return;
             }
-            sendNotAuthorizedMessage((UserData)message.Source);
+            _messageSender.SendNotAuthorizedMessage((UserData)message.Source);
         }
         private void removeGroup(GroupUpdateMessage message)
         {
-            
+
             GroupData changedGroup = message.GroupChanged;
-            
-            if (_contactsDB.TryRemoveGroup(changedGroup, (UserData)message.Source))
+
+            if (_serverDTO.ContactsDB.TryRemoveGroup(changedGroup, (UserData)message.Source))
             {
-                
-                updateUsersAboutGroupChange(message);
-                _membersDB.RemoveGroup(changedGroup.Name);
-                sendCustomMessage((UserData)message.Source, "Group deleted successfully.");
+
+                _messageSender.UpdateUsersAboutGroupChange(message);
+                _serverDTO.MembersDB.RemoveGroup(changedGroup.Name);
+                _messageSender.SendCustomMessage((UserData)message.Source, "Group deleted successfully.");
                 return;
             }
-            sendNotAuthorizedMessage((UserData)message.Source);
+            _messageSender.SendNotAuthorizedMessage((UserData)message.Source);
         }
-        private void sendNotAuthorizedMessage(UserData destination)
+        private void removeUserFromMembersDB(TcpClient client)
         {
-            sendCustomMessage(destination, "You are not authorized to do this action!");
+            User removedUser = _serverDTO.MembersDB.RemoveUser(client);
+            _serverDTO.ContactsDB.RemoveUser((UserData)removedUser.Data);
+            if (removedUser != null)
+            {
+                _messageSender.SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", _serverDTO.AdminData, _serverDTO.AdminData));
+                _messageSender.SendToAllClients(new ContactsMessage(_serverDTO.ContactsDB, _serverDTO.AdminData, _serverDTO.AdminData)); // ToDo: move to a function with indicative name
+            }
         }
-        private void deliverMessageToDestination(IMessage message)
+    }
+
+    public class MessageSender
+    {
+        private ServerData _serverDTO;
+        public MessageSender(MessageReceiver messageReceiver, ServerData serverData)
+        {
+            _serverDTO = serverData;
+        }
+        public void SendToAllClients(object obj)
+        {
+            foreach (var user in _serverDTO.MembersDB.TeslaUsers.Values)
+            {
+                SendMessageToUser(user.nwStream, obj);
+            }
+        }
+        public void SendNotAuthorizedMessage(UserData destination)
+        {
+            SendCustomMessage(destination, "You are not authorized to do this action!");
+        }
+        public void DeliverMessageToDestination(IMessage message)
         {
             // ToDo: Refactor - do logics in Members class
 
             if (message.GetType() == typeof(GroupMessage))
             {
-                sendGroupMessage(message);
+                SendGroupMessage(message);
                 Console.WriteLine($"message sent to {message.Source.Name}"); //debug
             }
             else
             //if (message.GetType() == typeof(TextMessage))
             {
-                sendTextMessage(message);
+                SendTextMessage(message);
                 Console.WriteLine($"message sent to {message.Source.Name}"); //debug
             }
 
         }
-        private void sendMessageToUser(NetworkStream nwStream, object obj)
+        public void SendMessageToUser(NetworkStream nwStream, object obj)
         {
             Console.WriteLine($"Sending a message with type of {obj.GetType()}");
-            _binaryFormatter = new BinaryFormatter();
-            _binaryFormatter.Serialize(nwStream, obj);
+            _serverDTO.BinarySerializer = new BinaryFormatter();
+            _serverDTO.BinarySerializer.Serialize(nwStream, obj);
 
         }
-        private void sendTextMessage(IMessage message)
+        public void SendTextMessage(IMessage message)
         {
             string destinationUID = message.Destination.UID;
-            User destination = _membersDB.GetUser(destinationUID);
+            User destination = _serverDTO.MembersDB.GetUser(destinationUID);
             if (destination != null)
             {
-                sendMessageToUser(destination.nwStream, message);
+                SendMessageToUser(destination.nwStream, message);
                 return;
             }
 
             Console.WriteLine("No such user"); //Debugging
         }
-        private void sendGroupMessage(IMessage message)
+        public void SendGroupMessage(IMessage message)
         {
             if (message.Destination.Name == "Everyone")
             {
@@ -316,21 +316,41 @@ namespace TeslaServer
                 return;
             }
             string destinationUID = message.Destination.UID;
-            Group destination = _membersDB.GetGroup(destinationUID);
+            Group destination = _serverDTO.MembersDB.GetGroup(destinationUID);
             if (destination != null)
             {
                 //Group destinationGroup = (Group)destination;
                 foreach (var userData in destination.GroupUsers)
                 {
-                    User userInGroup = _membersDB.GetUser(userData.UID);
-                    sendMessageToUser(userInGroup.nwStream, message);
+                    User userInGroup = _serverDTO.MembersDB.GetUser(userData.UID);
+                    SendMessageToUser(userInGroup.nwStream, message);
                 }
                 return;
             }
             Console.WriteLine("No such Group"); //Debugging
 
         }
-
-
+        public void UpdateUsersAboutGroupChange(GroupUpdateMessage message)
+        {
+            // updates group members about the change
+            List<UserData> groupUsers = message.GroupChanged.Users;
+            foreach (var groupMember in groupUsers)
+            {
+                User user = _serverDTO.MembersDB.GetUser(groupMember.UID);
+                Console.WriteLine($"user {groupMember.Name} is in the group");
+                if (user != null)
+                {
+                    Console.WriteLine($"user {user.Name} updated about group change");
+                    _serverDTO.BinarySerializer = new BinaryFormatter();
+                    _serverDTO.BinarySerializer.Serialize(user.nwStream, message);
+                }
+            }
+        }
+        public void SendCustomMessage(IMemberData destinationUser, string msg)
+        {
+            User userInGroup = _serverDTO.MembersDB.GetUser(destinationUser.UID);
+            TextMessage badRequestMessage = new TextMessage(msg, _serverDTO.AdminData, (UserData)destinationUser);
+            SendMessageToUser(userInGroup.nwStream, badRequestMessage);
+        }
     }
 }

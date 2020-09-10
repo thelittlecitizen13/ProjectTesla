@@ -154,6 +154,7 @@ namespace TeslaClient
             _messageReceiver.SetCurrentMemberChat(chatMember);
             _outputManager.ClearScreen();
             _outputManager.DisplayText($"You are now in a chat with {chatMember.Name}!", ConsoleColor.Green);
+            _outputManager.DisplayText(_commandManager.GetChatCommands(), ConsoleColor.Cyan);
             _messageReceiver.ShowUnSeenMessages();
             while (!_chatRoomExitToken)
             {
