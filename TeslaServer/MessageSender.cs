@@ -101,8 +101,8 @@ namespace TeslaServer
         public void SendCustomMessage(IMemberData destinationUser, string msg)
         {
             User userInGroup = _serverDTO.MembersDB.GetUser(destinationUser.UID);
-            TextMessage badRequestMessage = new TextMessage(msg, _serverDTO.AdminData, (UserData)destinationUser);
-            SendMessageToUser(userInGroup.nwStream, badRequestMessage);
+            TextMessage privateMessage = new TextMessage(msg, _serverDTO.AdminData, (UserData)destinationUser);
+            SendMessageToUser(userInGroup.nwStream, privateMessage);
         }
     }
 }

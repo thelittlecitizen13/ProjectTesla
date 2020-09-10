@@ -165,6 +165,7 @@ namespace TeslaClient
         {
             _outputManager.ClearScreen();
             _chatRoomExitToken = false;
+            _outputManager.DisplayText($"Hey {Name}", ConsoleColor.Green);
             displayContactMenu();
             IMemberData chatMember = ContactsMan.GetContactByName("Admin");
             _messageReceiver.SetCurrentMemberChat(chatMember);
@@ -182,9 +183,7 @@ namespace TeslaClient
                 return;
             }
             if (command.ToLower() == "/refresh")
-            {
                 return;
-            }
             if (command.ToLower() == "/notifications")
             {
                 if (_messageReceiver.IsNotifyUnSeenMessages)
@@ -194,12 +193,8 @@ namespace TeslaClient
                 return;
             }
             if (command.StartsWith("/"))
-            {
                 _messageSender.HandleUserCommands(command, ClientData, ClientData);
-                
-            }
-           
+
         }
-        
     }
 }

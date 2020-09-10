@@ -10,14 +10,15 @@ namespace TeslaServer
     {
         private MessageSender _messageSender;
         private ServerData _serverDTO;
+        private GroupUpdateProcessor _groupUpdateProcessor;
         public MessageReceiver(MessageSender messageSender, ServerData serverData)
         {
             _messageSender = messageSender;
             _serverDTO = serverData;
+            _groupUpdateProcessor = new GroupUpdateProcessor(_messageSender, _serverDTO);
         }
         public void ReceiveMessage(TcpClient client)
         {
-            //---get the incoming data through a network stream---
             NetworkStream nwStream = client.GetStream();
             do
             {
@@ -33,8 +34,6 @@ namespace TeslaServer
                 }
             }
             while (true);
-            // ToDo: find a way to change it - maybe to create searlization class
-            //while (!dataReceived.ToLower().Contains("exit!"));
             removeUserFromMembersDB(client);
             client.Close();
         }
@@ -42,7 +41,7 @@ namespace TeslaServer
         {
             if (message.GetType() == typeof(GroupUpdateMessage))
             {
-                processGroupUpdateMessage((GroupUpdateMessage)message);
+                _groupUpdateProcessor.ProcessGroupUpdateMessage((GroupUpdateMessage)message);
                 return;
             }
             if (message.GetType() == typeof(CommandMessage))
@@ -54,90 +53,7 @@ namespace TeslaServer
 
 
         }
-        private void processGroupUpdateMessage(GroupUpdateMessage message)
-        {
-
-            switch (message.typeOfChange)
-            {
-                case ChangeType.Create:
-                    createNewGroup(message);
-                    break;
-                case ChangeType.Update:
-                    updateGroup(message);
-                    break;
-                case
-                ChangeType.Leave:
-                    leaveGroup(message);
-                    break;
-                case ChangeType.Delete:
-                    removeGroup(message);
-                    break;
-                default:
-                    _messageSender.SendCustomMessage(message.Source, "Bad request");
-                    break;
-            }
-            // ToDo: update groups
-        }
-
-        private void createNewGroup(GroupUpdateMessage message)
-        {
-            GroupData changedGroup = message.GroupChanged;
-            _serverDTO.ContactsDB.AddGroup(changedGroup);
-            Group newGroup = new Group(changedGroup);
-            _serverDTO.MembersDB.AddGroup(newGroup);
-            _messageSender.SendCustomMessage((UserData)message.Source, "Group created successfully.");
-            _messageSender.UpdateUsersAboutGroupChange(message);
-        }
-        private void leaveGroup(GroupUpdateMessage message)
-        {
-            GroupData changedGroup = message.GroupChanged;
-            _serverDTO.ContactsDB.RemoveUserFromGroup(changedGroup, (UserData)message.Source);
-            _messageSender.SendCustomMessage((UserData)message.Source, "Left group successfully.");
-            message.typeOfChange = ChangeType.Update;
-            _serverDTO.MembersDB.UpdateGroup(changedGroup);
-            _messageSender.UpdateUsersAboutGroupChange(message);
-        }
-        private void updateGroup(GroupUpdateMessage message)
-        {
-            GroupData changedGroup = message.GroupChanged;
-            GroupData oldGroup = (GroupData)(_serverDTO.ContactsDB.GetContactByName(changedGroup.Name));
-            if (_serverDTO.ContactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
-            {
-                _serverDTO.MembersDB.UpdateGroup(changedGroup);
-                _messageSender.SendCustomMessage((UserData)message.Source, "Group updated successfully.");
-                List<UserData> removedUsers = oldGroup.Users.Where(user => !changedGroup.ContainsUser(user)).ToList();
-                //message.GroupChanged = oldGroup;
-                _messageSender.UpdateUsersAboutGroupChange(message);
-                if (removedUsers != null)
-                {
-                    GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, _serverDTO.AdminData);
-                    removedUserDatasGroup.RemoveUser(_serverDTO.AdminData);
-                    GroupUpdateMessage messageOfRemoval = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete, _serverDTO.AdminData, _serverDTO.AdminData);
-                    foreach (var removedUser in removedUsers)
-                    {
-                        User user = _serverDTO.MembersDB.GetUser(removedUser.UID);
-                        _messageSender.SendMessageToUser(user.nwStream, messageOfRemoval);
-                    }
-                }
-                return;
-            }
-            _messageSender.SendNotAuthorizedMessage((UserData)message.Source);
-        }
-        private void removeGroup(GroupUpdateMessage message)
-        {
-
-            GroupData changedGroup = message.GroupChanged;
-
-            if (_serverDTO.ContactsDB.TryRemoveGroup(changedGroup, (UserData)message.Source))
-            {
-
-                _messageSender.UpdateUsersAboutGroupChange(message);
-                _serverDTO.MembersDB.RemoveGroup(changedGroup.Name);
-                _messageSender.SendCustomMessage((UserData)message.Source, "Group deleted successfully.");
-                return;
-            }
-            _messageSender.SendNotAuthorizedMessage((UserData)message.Source);
-        }
+        
         private void removeUserFromMembersDB(TcpClient client)
         {
             User removedUser = _serverDTO.MembersDB.RemoveUser(client);
