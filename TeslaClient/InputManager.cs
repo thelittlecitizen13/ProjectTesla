@@ -15,18 +15,6 @@ namespace TeslaClient
         {
             return Console.ReadLine();
         }
-        public bool IsSendPicture(string input)
-        {
-            return input.ToLower() == "picture" || input.ToLower().StartsWith("picture;");
-        }
-        public bool IsSendScreenShot(string input)
-        {
-            return input.ToLower() == "picture";
-        }
-        public bool IsSendLocalPicture(string input)
-        {
-            return input.ToLower().StartsWith("picture;");
-        }
         public bool IsFileExists(string filePath)
         {
             return (File.Exists(filePath));
@@ -39,7 +27,7 @@ namespace TeslaClient
             {
                 if (choose.StartsWith("/"))
                     return choose;
-                _outputManager.DisplayText("Contact not found. Please try again");
+                _outputManager.DisplayText("Contact not found. Please try again", ConsoleColor.Red);
                 choose = Console.ReadLine();
             }
             return choose;

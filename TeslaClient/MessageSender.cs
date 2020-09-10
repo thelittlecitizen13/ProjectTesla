@@ -13,7 +13,7 @@ namespace TeslaClient
     public class MessageSender
     {
         private NetworkStream _nwStream;
-        private IFormatter _binaryFormatter;
+        private ISerializer _serializer;
         private OutputManager _outputManager;
         private InputManager _inputManager;
         private CommandManager _commandManager;
@@ -21,7 +21,7 @@ namespace TeslaClient
         public MessageSender(NetworkStream networkStream, OutputManager outputManager, InputManager inputManager, string name, CommandManager commandManager)
         {
             _nwStream = networkStream;
-            _binaryFormatter = new BinaryFormatter();
+            _serializer = new BinarySerializer();
             _outputManager = outputManager;
             _inputManager = inputManager;
             _name = name;
@@ -29,46 +29,26 @@ namespace TeslaClient
         }
         public void SendNewMessage(string msg, IMemberData destinationMember, IMemberData sourceMember, UserData messageAuthor)
         {
-            // Should refactor
             if (destinationMember.GetType() == typeof(GroupData))
             {
                 SendNewGroupMessage(msg, messageAuthor, (GroupData)sourceMember, (GroupData)destinationMember);
                 return;
             }
             SendNewTextMessage(msg, (UserData)sourceMember, (UserData)destinationMember);
-
-            //if (_inputManager.IsSendPicture(msg))
-            //{
-            //    if (_inputManager.IsSendScreenShot(msg))
-            //        SendNewImageMessage((UserData)sourceMember, (UserData)destinationMember);
-            //    else
-            //    {
-            //        string imgPath = System.Text.RegularExpressions.Regex.Split(msg, ";")[1];
-            //        if (_inputManager.IsFileExists(imgPath))
-            //            SendNewImageMessage(imgPath, (UserData)sourceMember, (UserData)destinationMember);
-            //        else
-            //            _outputManager.DisplayText("Error - img not found");
-            //    }
-            //}
-            //else
-            //{
-            //    SendNewTextMessage(msg, (UserData)sourceMember, (UserData)destinationMember);
-            //}
-
         }
         public void SendNewMessage(IMessage message)
         {
-            _binaryFormatter.Serialize(_nwStream, message);
+            _serializer.Serialize(_nwStream, message);
         }
         public void SendNewTextMessage(string text, UserData src, UserData dst)
         {
             IMessage message = new TextMessage(text, src, dst);
-            _binaryFormatter.Serialize(_nwStream, message);
+            _serializer.Serialize(_nwStream, message);
         }
         public void SendNewGroupMessage(string text, UserData author, GroupData src, GroupData dst)
         {
             IMessage message = new GroupMessage(text, author, src, dst);
-            _binaryFormatter.Serialize(_nwStream, message);
+            _serializer.Serialize(_nwStream, message);
         }
 
         public void HandleUserCommands(string msg, IMemberData source, IMemberData destination)

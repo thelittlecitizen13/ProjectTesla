@@ -12,15 +12,15 @@ namespace TeslaServer
     {
         public IPAddress LocalAddress;
         public TcpListener Server;
-        public IFormatter BinarySerializer;
+        public ISerializer Serializer;
         public Members MembersDB;
         public Contacts ContactsDB;
         public UserData AdminData;
-        public ServerData(IPAddress iPAddress, TcpListener server, IFormatter formatter, Members membersDB, Contacts contactsDB, UserData adminData)
+        public ServerData(IPAddress iPAddress, TcpListener server, ISerializer serializer, Members membersDB, Contacts contactsDB, UserData adminData)
         {
             LocalAddress = iPAddress;
             Server = server;
-            BinarySerializer = formatter;
+            Serializer = serializer;
             MembersDB = membersDB;
             ContactsDB = contactsDB;
             AdminData = adminData;

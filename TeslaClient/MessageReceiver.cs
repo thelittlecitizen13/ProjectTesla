@@ -13,7 +13,7 @@ namespace TeslaClient
     public class MessageReceiver
     {
         private NetworkStream _nwStream;
-        private IFormatter _binaryFormatter;
+        private ISerializer _serializer;
         private OutputManager _outputManager;
         private ContactsManager _contactsManager;
         private IMemberData _currentChatMember;
@@ -24,7 +24,7 @@ namespace TeslaClient
         public MessageReceiver(NetworkStream networkStream, OutputManager outputManager, ContactsManager contactsManager)
         {
             _nwStream = networkStream;
-            _binaryFormatter = new BinaryFormatter();
+            _serializer = new BinarySerializer();
             _outputManager = outputManager;
             _contactsManager = contactsManager;
             LocalChatHistories = new ChatHistories();
@@ -99,8 +99,7 @@ namespace TeslaClient
         {
             try
             {
-                _binaryFormatter = new BinaryFormatter();
-                var dataReceived = _binaryFormatter.Deserialize(_nwStream);
+                var dataReceived = _serializer.Deserialize(_nwStream);
                 return (IMessage)dataReceived;
             }
             catch (Exception e)

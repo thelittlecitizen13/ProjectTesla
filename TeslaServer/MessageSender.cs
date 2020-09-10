@@ -44,8 +44,7 @@ namespace TeslaServer
         public void SendMessageToUser(NetworkStream nwStream, object obj)
         {
             Console.WriteLine($"Sending a message with type of {obj.GetType()}");
-            _serverDTO.BinarySerializer = new BinaryFormatter();
-            _serverDTO.BinarySerializer.Serialize(nwStream, obj);
+            _serverDTO.Serializer.Serialize(nwStream, obj);
 
         }
         public void SendTextMessage(IMessage message)
@@ -93,8 +92,7 @@ namespace TeslaServer
                 if (user != null)
                 {
                     Console.WriteLine($"user {user.Name} updated about group change");
-                    _serverDTO.BinarySerializer = new BinaryFormatter();
-                    _serverDTO.BinarySerializer.Serialize(user.nwStream, message);
+                    _serverDTO.Serializer.Serialize(user.nwStream, message);
                 }
             }
         }

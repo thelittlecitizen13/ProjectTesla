@@ -36,6 +36,7 @@ namespace TeslaClient
         }
         public void DisplayAnImage(string imgPath)
         {
+            // relevant for windows clients only
             try
             {
                 Process.Start("cmd", $"/c {imgPath}");
@@ -55,7 +56,7 @@ namespace TeslaClient
         }
         public string CreateImageFolder()
         {
-            string path = @"C:\images\" + _clientName;
+            string path = @"C:\TeslaImages\" + _clientName;
             Directory.CreateDirectory(path);
             return path;
         }

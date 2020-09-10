@@ -24,7 +24,7 @@ namespace TeslaServer
             {
                 try
                 {
-                    var dataReceived = _serverDTO.BinarySerializer.Deserialize(nwStream);
+                    var dataReceived = _serverDTO.Serializer.Deserialize(nwStream);
                     processMessage((IMessage)dataReceived);
                 }
                 catch (Exception e)
@@ -50,8 +50,6 @@ namespace TeslaServer
                 return;
             }
             _messageSender.DeliverMessageToDestination(message);
-
-
         }
         
         private void removeUserFromMembersDB(TcpClient client)
@@ -60,8 +58,10 @@ namespace TeslaServer
             _serverDTO.ContactsDB.RemoveUser((UserData)removedUser.Data);
             if (removedUser != null)
             {
-                _messageSender.SendToAllClients(new TextMessage($"{removedUser.Name} has left the chat!", _serverDTO.AdminData, _serverDTO.AdminData));
-                _messageSender.SendToAllClients(new ContactsMessage(_serverDTO.ContactsDB, _serverDTO.AdminData, _serverDTO.AdminData)); // ToDo: move to a function with indicative name
+                TextMessage userLeftChatMessage = new TextMessage($"{removedUser.Name} has left the chat!", _serverDTO.AdminData, _serverDTO.AdminData);
+                _messageSender.SendToAllClients(userLeftChatMessage);
+                ContactsMessage contactsUpdateMessage = new ContactsMessage(_serverDTO.ContactsDB, _serverDTO.AdminData, _serverDTO.AdminData);
+                _messageSender.SendToAllClients(contactsUpdateMessage); // ToDo: move to a function with indicative name
             }
         }
     }
