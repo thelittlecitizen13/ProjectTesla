@@ -43,10 +43,7 @@ namespace TeslaClient
         }
 
         private void WriteAMessage(IMemberData currentChatMember)
-        {
-            // ToDo: print you are now in a chat room with..
-            
-            _outputManager.DisplayText("Enter your message");
+        {            
             string msg = _inputManager.GetUserInput();
             if (msg.ToLower() == EXIT_COMMAND)
             {
@@ -74,7 +71,6 @@ namespace TeslaClient
         {
             _messageReceiver.Run();
         }
-        
         private void registerToServerWithMessage(NetworkStream nwStream)
         {
             //IMemberData EveryOneGroup = _contactsManager.GetContactByName("Everyone");
@@ -92,86 +88,53 @@ namespace TeslaClient
         public void Run()
         {
             ContactsMan.UpdateContactsDB();
+            NetworkStream nwStream = _client.GetStream();
             try
             {
-                using (NetworkStream nwStream = _client.GetStream())
+                registerToServerWithMessage(nwStream);
+                ThreadPool.QueueUserWorkItem(obj =>
                 {
-                    registerToServerWithMessage(nwStream);
-                    ThreadPool.QueueUserWorkItem(obj =>
+                    try 
                     {
-                        try 
+                        while (true)
                         {
-                            while (true)
-                            {
-                                ReceiveMessages();
-                            }
+                            ReceiveMessages();
                         }
-                        catch (Exception e)
-                        {
-                            _outputManager.DisplayText(e.Message);
-                        }
-                        
-                    });
-                    ThreadPool.QueueUserWorkItem(obj =>
-                    {
-                        try
-                        {
-                            while (true)
-                            {
-                                _messageReceiver.NotifyForUnSeenMessages();
-                                Task.Delay(10000).Wait();
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _outputManager.DisplayText(e.Message);
-                        }
-
-                    });
-
-                    while (true)
-                    {
-                        _chatRoomExitToken = false;
-                        displayContactMenu();
-                        IMemberData chatMember = ContactsMan.GetContactByName("Admin");
-                        _messageReceiver.SetCurrentMemberChat(chatMember);
-                        _messageReceiver.ShowUnSeenMessages();
-                        string choice = _inputManager.ValidateContactChoose(ContactsMan);
-                        if (choice.ToLower() == EXIT_COMMAND)
-                            break;
-                        if (choice.ToLower() == "/help")
-                        {
-                            _outputManager.DisplayText(_commandManager.GetCommandHelp());
-                            continue;
-                        }
-                        if (choice.ToLower() == "/refresh")
-                        {
-                            continue;
-                        }
-                        if (choice.ToLower() == "/notifications")
-                        {
-                            if (_messageReceiver.IsNotifyUnSeenMessages)
-                                _messageReceiver.IsNotifyUnSeenMessages = false;
-                            else
-                                _messageReceiver.IsNotifyUnSeenMessages = true;
-                            continue;
-                        }
-                        if (choice.StartsWith("/"))
-                        {
-                            _messageSender.HandleUserCommands(choice);
-                            continue;
-                        }
-                         chatMember = ContactsMan.GetContactByName(choice);
-                        _messageReceiver.SetCurrentMemberChat(chatMember);
-                        _messageReceiver.ShowUnSeenMessages();
-                        while (!_chatRoomExitToken)
-                        {
-                            WriteAMessage(chatMember);
-                        }
-                        
-                        
-
                     }
+                    catch (Exception e)
+                    {
+                        _outputManager.DisplayText(e.Message);
+                    }
+                        
+                });
+                ThreadPool.QueueUserWorkItem(obj =>
+                {
+                    try
+                    {
+                        while (true)
+                        {
+                            _messageReceiver.NotifyForUnSeenMessages();
+                            Task.Delay(10000).Wait();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _outputManager.DisplayText(e.Message);
+                    }
+
+                });
+                while (true)
+                {
+                    resetChat();
+                    string choice = _inputManager.ValidateContactChoose(ContactsMan);
+                    if (choice.ToLower() == EXIT_COMMAND)
+                        break;
+                    if (choice.StartsWith("/"))
+                    {
+                        processCommand(choice);
+                        continue;
+                    }
+                    startNewConversation(choice);
                 }
             }
             catch (Exception e)
@@ -180,9 +143,58 @@ namespace TeslaClient
             }
             finally
             {
+                nwStream.Close();
                 _client.Close();
                 Console.ReadLine();
             }
+        }
+        private void startNewConversation(string memberName)
+        {
+            IMemberData chatMember = ContactsMan.GetContactByName(memberName);
+            _messageReceiver.SetCurrentMemberChat(chatMember);
+            _outputManager.ClearScreen();
+            _outputManager.DisplayText($"You are now in a chat with {chatMember.Name}!", ConsoleColor.Green);
+            _messageReceiver.ShowUnSeenMessages();
+            while (!_chatRoomExitToken)
+            {
+                WriteAMessage(chatMember);
+            }
+        }
+        private void resetChat()
+        {
+            _outputManager.ClearScreen();
+            _chatRoomExitToken = false;
+            displayContactMenu();
+            IMemberData chatMember = ContactsMan.GetContactByName("Admin");
+            _messageReceiver.SetCurrentMemberChat(chatMember);
+            _messageReceiver.ShowUnSeenMessages();
+        }
+        private void processCommand(string command)
+        {
+            if (command.ToLower() == "/help")
+            {
+                _outputManager.DisplayText(_commandManager.GetCommandHelp());
+                return;
+            }
+            if (command.ToLower() == "/refresh")
+            {
+                return;
+            }
+            if (command.ToLower() == "/notifications")
+            {
+                if (_messageReceiver.IsNotifyUnSeenMessages)
+                    _messageReceiver.IsNotifyUnSeenMessages = false;
+                else
+                    _messageReceiver.IsNotifyUnSeenMessages = true;
+                return;
+            }
+            if (command.StartsWith("/"))
+            {
+                _messageSender.HandleUserCommands(command);
+                _outputManager.DisplayText("Press any key to continue..", ConsoleColor.Gray);
+                _inputManager.ReadLine();
+            }
+           
         }
         
     }

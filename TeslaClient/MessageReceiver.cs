@@ -159,7 +159,7 @@ namespace TeslaClient
                     sb.AppendLine($"You have {unseenFromAMember.Value} messages from {member.Name}");
             }
             if (!string.IsNullOrWhiteSpace(sb.ToString()))
-                _outputManager.DisplayText(sb.ToString());
+                _outputManager.DisplayText(sb.ToString(),ConsoleColor.Gray);
         }
     }
 

@@ -44,5 +44,9 @@ namespace TeslaClient
             }
             return choose;
         }
+        public void ReadLine()
+        {
+            Console.ReadLine();
+        }
     }
 }

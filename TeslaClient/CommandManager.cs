@@ -169,6 +169,15 @@ namespace TeslaClient
         {
             return GetBasicCommandsHelp() + GetGroupCommandHelp();
         }
+        public string GetChatCommands()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Type /picture to send a screen shot");
+            sb.AppendLine("Type /picture;[path] to send an existing local picture");
+            sb.AppendLine("Type /exit to exit chat");
+            sb.AppendLine();
+            return sb.ToString();
+        }
         public string GetBasicCommandsHelp()
         {
             StringBuilder sb = new StringBuilder();

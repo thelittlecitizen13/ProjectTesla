@@ -14,14 +14,25 @@ namespace TeslaClient
         {
             _clientName = clientName;
         }
-        private void displayTextToConsole(string text)
+        public void ClearScreen()
         {
+            Console.Clear();
+        }
+        private void displayTextToConsole(string text, ConsoleColor consoleColor = ConsoleColor.White)
+        {
+            Console.ForegroundColor = consoleColor;
             Console.WriteLine(text);
+            Console.ResetColor();
         }
         public void DisplayText(string text)
         {
             // You can control where the text will be displayed
             displayTextToConsole(text);
+        }
+        public void DisplayText(string text, ConsoleColor consoleColor)
+        {
+            // You can control where the text will be displayed
+            displayTextToConsole(text, consoleColor);
         }
         public void DisplayAnImage(string imgPath)
         {
