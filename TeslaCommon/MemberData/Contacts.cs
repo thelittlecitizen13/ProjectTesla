@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace TeslaCommon
 {
@@ -23,18 +25,21 @@ namespace TeslaCommon
         }
         public void RemoveUser(UserData memberData)
         {
-            UserData removedMemberData = null;
-            if (UsersList.ContainsKey(memberData.Name))
-            {
-                UsersList.Remove(memberData.Name, out removedMemberData);
-            }
             try
             {
-                if (removedMemberData != null && GroupsList.Count != 0)
-                    foreach (var group in GroupsList.Values)
+                UserData removedMemberData = null;
+                if (UsersList.ContainsKey(memberData.Name))
+                {
+                    UsersList.Remove(memberData.Name, out removedMemberData);
+                }
+                if (removedMemberData != null)
+                {
+                    List<GroupData> userGroupMembership = GetUserGroupMembership(memberData);
+                    foreach (var group in userGroupMembership)
                     {
                         RemoveUserFromGroup(group, removedMemberData);
                     }
+                }
             }
             catch (Exception e)
             {
@@ -115,8 +120,6 @@ namespace TeslaCommon
                 if (commiter.Equals(user))
                 {
                     userToRemove = user;
-                    
-                    Console.WriteLine("User left a group"); //debug
                 }
 
             }
@@ -128,14 +131,40 @@ namespace TeslaCommon
                 if (commiter.Equals(manager))
                 {
                     userToRemove = manager;
-                    
-                    Console.WriteLine("Manager left a group"); //debug
                 }
             }
             if (userToRemove != null)
                 groupData.GroupManagers.Remove(userToRemove);
             GroupsList[groupData.Name] = groupData;
 
+        }
+        public List<GroupData> GetUserGroupMembership(UserData userData)
+        {
+            // REAL SHIT!! there was no time. REFACTOR!
+            List<GroupData> groupMembership = new List<GroupData>();
+            foreach (var groupData in GroupsList.Values)
+            {
+                foreach (var user in groupData.Users)
+                {
+                    if (user.Equals(userData))
+                    {
+                        groupMembership.Add(groupData);
+                        break;
+                    }
+                }
+            }
+            foreach (var groupData in GroupsList.Values)
+            {
+                foreach (var manager in groupData.GroupManagers)
+                {
+                    if (manager.Equals(userData))
+                    {
+                        groupMembership.Add(groupData);
+                    }
+                }
+            }
+            List<GroupData> uniqueGroupsMembership = groupMembership.GroupBy(x => x.UID).Select(group => group.First()).ToList();
+            return uniqueGroupsMembership;
         }
         
     }

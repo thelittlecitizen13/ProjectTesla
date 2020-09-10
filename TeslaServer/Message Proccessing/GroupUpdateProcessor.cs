@@ -51,42 +51,46 @@ namespace TeslaServer
         private void leaveGroup(GroupUpdateMessage message)
         {
             GroupData changedGroup = message.GroupChanged;
-            _serverDTO.ContactsDB.RemoveUserFromGroup(changedGroup, (UserData)message.Source);
+            removeUserFromGroup((UserData)message.Source, changedGroup);
             message.typeOfChange = ChangeType.Update;
             _serverDTO.MembersDB.UpdateGroup(changedGroup);
             _messageSender.SendCustomMessage((UserData)message.Source, "Left group successfully.");
-            GroupMessage userLeftGroupMessage = new GroupMessage($"{message.Source.Name} left the group", _serverDTO.AdminData, changedGroup, changedGroup);
+            NotifyUsersAboutGroupLeave(changedGroup, (UserData)message.Source);
             _messageSender.UpdateUsersAboutGroupChange(message);
-            _messageSender.SendGroupMessage(userLeftGroupMessage);
         }
         private void updateGroup(GroupUpdateMessage message)
         {
             GroupData changedGroup = message.GroupChanged;
-            
+            GroupData originalGroup = (GroupData)(_serverDTO.ContactsDB.GetContactByName(changedGroup.Name));
             if (_serverDTO.ContactsDB.TryUpdateGroup(changedGroup, (UserData)message.Source))
             {
                 _serverDTO.MembersDB.UpdateGroup(changedGroup);
                 _messageSender.SendCustomMessage((UserData)message.Source, "Group updated successfully.");
                 
                 _messageSender.UpdateUsersAboutGroupChange(message);
-                notifyUsersAboutGroupKick(changedGroup);
+                notifyUsersAboutGroupKick(changedGroup, originalGroup);
                 return;
             }
             _messageSender.SendNotAuthorizedMessage((UserData)message.Source);
         }
-        private void notifyUsersAboutGroupKick(GroupData changedGroup)
+        public void NotifyUsersAboutGroupLeave(GroupData changedGroup, UserData userLeft)
         {
-            GroupData oldGroup = (GroupData)(_serverDTO.ContactsDB.GetContactByName(changedGroup.Name));
-            List<UserData> removedUsers = oldGroup.Users.Where(user => !changedGroup.ContainsUser(user)).ToList();
+            GroupMessage userLeftGroupMessage = new GroupMessage($"{userLeft.Name} left the group", _serverDTO.AdminData, changedGroup, changedGroup);
+            _messageSender.SendGroupMessage(userLeftGroupMessage);
+        }
+        private void notifyUsersAboutGroupKick(GroupData changedGroup, GroupData originalGroup)
+        {
+            List<UserData> removedUsers = originalGroup.Users.Where(user => !changedGroup.ContainsUser(user)).ToList();
             if (removedUsers != null)
             {
-                GroupData removedUserDatasGroup = new GroupData(oldGroup.Name, _serverDTO.AdminData);
+                GroupData removedUserDatasGroup = new GroupData(originalGroup.Name, _serverDTO.AdminData);
                 removedUserDatasGroup.RemoveUser(_serverDTO.AdminData);
                 GroupUpdateMessage deteleGroup = new GroupUpdateMessage(removedUserDatasGroup, ChangeType.Delete,
                     _serverDTO.AdminData, _serverDTO.AdminData); // Send a delete GroupUpdateMessage to removed users
 
                 foreach (var removedUser in removedUsers)
                 {
+                    removeUserFromGroup(removedUser, originalGroup);
                     User user = _serverDTO.MembersDB.GetUser(removedUser.UID);
                     TextMessage userMessageOfRemoval = new TextMessage($"You kicked out of {changedGroup.Name} group!", 
                         _serverDTO.AdminData, (UserData)user.Data);
@@ -96,6 +100,12 @@ namespace TeslaServer
                         removedUserDatasGroup, removedUserDatasGroup);
                 }
             }
+        }
+        private void removeUserFromGroup(UserData removedUser, GroupData group)
+        {
+            _serverDTO.ContactsDB.RemoveUserFromGroup(group, removedUser);
+            Group groupUserLeft = _serverDTO.MembersDB.GetGroup(group.UID);
+            _serverDTO.MembersDB.RemoveUserFromGroup(removedUser, groupUserLeft);
         }
         private void removeGroup(GroupUpdateMessage message)
         {

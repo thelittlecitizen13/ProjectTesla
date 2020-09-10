@@ -57,7 +57,6 @@ namespace TeslaClient
 
                     _teslaClient.clientData.contactsManager.ContactsDB.RemoveGroup(groupToLeave);
                     _teslaClient.clientData.contactsManager.UpdateContactsDB();
-                    Console.WriteLine("Leaving group..."); //debug
                     return new GroupUpdateMessage(groupToLeave, ChangeType.Leave, _teslaClient.MyData, new UserData("Server"));
                 }
                 catch

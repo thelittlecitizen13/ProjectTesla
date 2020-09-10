@@ -31,13 +31,11 @@ namespace TeslaServer
             if (message.GetType() == typeof(GroupMessage))
             {
                 SendGroupMessage(message);
-                Console.WriteLine($"message sent to {message.Source.Name}"); //debug
             }
             else
             //if (message.GetType() == typeof(TextMessage))
             {
                 SendTextMessage(message);
-                Console.WriteLine($"message sent to {message.Source.Name}"); //debug
             }
 
         }
@@ -56,8 +54,6 @@ namespace TeslaServer
                 SendMessageToUser(destination.nwStream, message);
                 return;
             }
-
-            Console.WriteLine("No such user"); //Debugging
         }
         public void SendGroupMessage(IMessage message)
         {
@@ -70,15 +66,20 @@ namespace TeslaServer
             Group destination = _serverDTO.MembersDB.GetGroup(destinationUID);
             if (destination != null)
             {
-                //Group destinationGroup = (Group)destination;
                 foreach (var userData in destination.GroupUsers)
                 {
-                    User userInGroup = _serverDTO.MembersDB.GetUser(userData.UID);
-                    SendMessageToUser(userInGroup.nwStream, message);
+                    try
+                    {
+                        User userInGroup = _serverDTO.MembersDB.GetUser(userData.UID);
+                        SendMessageToUser(userInGroup.nwStream, message);
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
                 return;
             }
-            Console.WriteLine("No such Group"); //Debugging
 
         }
         public void UpdateUsersAboutGroupChange(GroupUpdateMessage message)

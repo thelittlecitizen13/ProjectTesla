@@ -55,13 +55,23 @@ namespace TeslaServer
         private void removeUserFromMembersDB(TcpClient client)
         {
             User removedUser = _serverDTO.MembersDB.RemoveUser(client);
-            _serverDTO.ContactsDB.RemoveUser((UserData)removedUser.Data);
+            UserData removedUserData = (UserData)removedUser.Data;
+            removeUserFromContactsDB(removedUserData); 
             if (removedUser != null)
             {
                 TextMessage userLeftChatMessage = new TextMessage($"{removedUser.Name} has left the chat!", _serverDTO.AdminData, _serverDTO.AdminData);
                 _messageSender.SendToAllClients(userLeftChatMessage);
                 ContactsMessage contactsUpdateMessage = new ContactsMessage(_serverDTO.ContactsDB, _serverDTO.AdminData, _serverDTO.AdminData);
                 _messageSender.SendToAllClients(contactsUpdateMessage); // ToDo: move to a function with indicative name
+            }
+        }
+        private void removeUserFromContactsDB(UserData userData)
+        {
+            List<GroupData> userGroupMembership = _serverDTO.ContactsDB.GetUserGroupMembership(userData);
+            _serverDTO.ContactsDB.RemoveUser(userData);
+            foreach (var group in userGroupMembership)
+            {
+                _groupUpdateProcessor.NotifyUsersAboutGroupLeave(group, userData);
             }
         }
     }
